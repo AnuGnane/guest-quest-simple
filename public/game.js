@@ -7,6 +7,11 @@ class GuestQuestGame {
         this.gameStarted = false;
         this.characters = [];
         this.characterSets = {};
+        this.gameStats = {
+            questionsAsked: 0,
+            guessesMade: 0,
+            turnCount: 1
+        };
         
         this.init();
     }
@@ -197,6 +202,8 @@ class GuestQuestGame {
     handleGameStarted(payload) {
         this.gameStarted = true;
         this.characters = payload.allCharacters;
+        this.characterSet = payload.characterSet;
+        this.yourCharacter = payload.yourCharacter;
         
         // Hide lobby, show game
         document.getElementById('lobby-screen').style.display = 'none';
@@ -205,13 +212,77 @@ class GuestQuestGame {
         // Set character
         document.getElementById('character-name').textContent = payload.yourCharacter.name;
         
+        // Show character details
+        this.displayCharacterDetails(payload.yourCharacter);
+        
         // Set current turn
         document.getElementById('turn-player').textContent = payload.currentTurn;
         
         // Create character buttons
         this.createCharacterButtons();
         
+        // Setup question hints
+        this.setupQuestionHints();
+        
         this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
+    }
+    
+    displayCharacterDetails(character) {
+        const detailsEl = document.getElementById('character-details');
+        let details = [];
+        
+        if (character.gender) details.push(`Gender: ${character.gender}`);
+        if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
+        if (character.hasGlasses !== undefined) details.push(`Glasses: ${character.hasGlasses ? 'yes' : 'no'}`);
+        if (character.age) details.push(`Age: ${character.age}`);
+        if (character.power) details.push(`Power: ${character.power}`);
+        if (character.team) details.push(`Team: ${character.team}`);
+        if (character.hascape !== undefined) details.push(`Cape: ${character.hascape ? 'yes' : 'no'}`);
+        
+        detailsEl.textContent = details.join(' • ');
+    }
+    
+    setupQuestionHints() {
+        const hintContent = document.getElementById('hint-content');
+        let hints = '';
+        
+        if (this.characterSet === 'classic') {
+            hints = `
+                <div class="hint-category">
+                    <strong>Gender:</strong>
+                    <div class="hint-examples">"Is your character male?" "Are they female?"</div>
+                </div>
+                <div class="hint-category">
+                    <strong>Hair Color:</strong>
+                    <div class="hint-examples">"Do they have blonde hair?" "Is their hair brown/black/red/grey?"</div>
+                </div>
+                <div class="hint-category">
+                    <strong>Accessories:</strong>
+                    <div class="hint-examples">"Do they wear glasses?"</div>
+                </div>
+                <div class="hint-category">
+                    <strong>Age:</strong>
+                    <div class="hint-examples">"Are they young?" "Are they old?" "Are they middle-aged?"</div>
+                </div>
+            `;
+        } else if (this.characterSet === 'superheroes') {
+            hints = `
+                <div class="hint-category">
+                    <strong>Powers:</strong>
+                    <div class="hint-examples">"Can they fly?" "Do they have super strength?"</div>
+                </div>
+                <div class="hint-category">
+                    <strong>Teams:</strong>
+                    <div class="hint-examples">"Are they in the Justice League?" "Are they an Avenger?"</div>
+                </div>
+                <div class="hint-category">
+                    <strong>Appearance:</strong>
+                    <div class="hint-examples">"Do they wear a cape?" "Are they male/female?"</div>
+                </div>
+            `;
+        }
+        
+        hintContent.innerHTML = hints;
     }
     
     createCharacterButtons() {
@@ -241,11 +312,18 @@ class GuestQuestGame {
     }
     
     handleQuestionAsked(payload) {
-        this.addLogMessage(`${payload.player} asked: "${payload.question}" - Answer: ${payload.answer}`);
+        this.gameStats.questionsAsked++;
+        this.updateStats();
+        
+        const intelligentIcon = payload.wasIntelligent ? '🧠' : '🎲';
+        this.addLogMessage(`${intelligentIcon} ${payload.player} asked: "${payload.question}" - Answer: ${payload.answer}`);
     }
     
     handleTurnChanged(payload) {
         document.getElementById('turn-player').textContent = payload.currentTurn;
+        
+        this.gameStats.turnCount++;
+        this.updateStats();
         
         const isMyTurn = payload.currentTurn === this.playerName;
         document.getElementById('question-input').disabled = !isMyTurn;
@@ -253,6 +331,17 @@ class GuestQuestGame {
         
         const characterBtns = document.querySelectorAll('.character-btn');
         characterBtns.forEach(btn => btn.disabled = !isMyTurn);
+        
+        // Visual feedback for turn change
+        const turnEl = document.getElementById('current-turn');
+        if (isMyTurn) {
+            turnEl.style.background = '#d4edda';
+            turnEl.style.color = '#155724';
+            this.addLogMessage('🎯 It\'s your turn!');
+        } else {
+            turnEl.style.background = '#f8d7da';
+            turnEl.style.color = '#721c24';
+        }
     }
     
     makeGuess(character) {
@@ -262,7 +351,17 @@ class GuestQuestGame {
     }
     
     handleGuessMade(payload) {
-        this.addLogMessage(`${payload.player} guessed ${payload.character} - ${payload.correct ? 'Correct!' : 'Wrong!'}`);
+        this.gameStats.guessesMade++;
+        this.updateStats();
+        
+        const resultIcon = payload.correct ? '✅' : '❌';
+        this.addLogMessage(`${resultIcon} ${payload.player} guessed ${payload.character} - ${payload.correct ? 'Correct!' : 'Wrong!'}`);
+    }
+    
+    updateStats() {
+        document.getElementById('questions-count').textContent = this.gameStats.questionsAsked;
+        document.getElementById('guesses-count').textContent = this.gameStats.guessesMade;
+        document.getElementById('turn-count').textContent = this.gameStats.turnCount;
     }
     
     handleGameOver(payload) {
@@ -316,6 +415,19 @@ function startGame() {
 
 function askQuestion() {
     game.askQuestion();
+}
+
+function toggleHelp() {
+    const hints = document.getElementById('question-hints');
+    const button = document.getElementById('toggle-help');
+    
+    if (hints.style.display === 'none') {
+        hints.style.display = 'block';
+        button.textContent = '🔼 Hide Question Hints';
+    } else {
+        hints.style.display = 'none';
+        button.textContent = '💡 Show Question Hints';
+    }
 }
 
 // Initialize game when page loads

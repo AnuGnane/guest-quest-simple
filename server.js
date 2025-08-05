@@ -197,17 +197,65 @@ function askQuestion(ws, payload) {
   if (!room || !room.gameStarted) return;
   
   const { question } = payload;
+  const askingPlayer = room.players.find(p => p.ws === ws);
   
-  // Simple auto-answer (random yes/no)
-  const answer = Math.random() > 0.5 ? 'yes' : 'no';
+  // Find the target player (the one being asked about)
+  const targetPlayer = room.players.find(p => p !== askingPlayer);
+  const targetCharacter = targetPlayer.character;
+  
+  // Smart answer based on character attributes
+  let answer = 'no'; // default
+  const lowerQuestion = question.toLowerCase();
+  
+  // Check for attribute-based questions
+  if (lowerQuestion.includes('male') || lowerQuestion.includes('man') || lowerQuestion.includes('boy')) {
+    answer = targetCharacter.gender === 'male' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('female') || lowerQuestion.includes('woman') || lowerQuestion.includes('girl')) {
+    answer = targetCharacter.gender === 'female' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('blonde') || lowerQuestion.includes('blond')) {
+    answer = targetCharacter.hairColor === 'blonde' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('brown hair') || lowerQuestion.includes('brunette')) {
+    answer = targetCharacter.hairColor === 'brown' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('black hair')) {
+    answer = targetCharacter.hairColor === 'black' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('red hair') || lowerQuestion.includes('ginger')) {
+    answer = targetCharacter.hairColor === 'red' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('grey hair') || lowerQuestion.includes('gray hair')) {
+    answer = targetCharacter.hairColor === 'grey' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('glasses') || lowerQuestion.includes('spectacles')) {
+    answer = targetCharacter.hasGlasses ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('young')) {
+    answer = targetCharacter.age === 'young' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('old')) {
+    answer = targetCharacter.age === 'old' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('middle') || lowerQuestion.includes('middle-aged')) {
+    answer = targetCharacter.age === 'middle' ? 'yes' : 'no';
+  } 
+  // Superhero specific questions
+  else if (lowerQuestion.includes('fly') || lowerQuestion.includes('flight')) {
+    answer = targetCharacter.power === 'flight' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('strong') || lowerQuestion.includes('strength')) {
+    answer = targetCharacter.power === 'strength' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('justice league')) {
+    answer = targetCharacter.team === 'Justice League' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('avengers')) {
+    answer = targetCharacter.team === 'Avengers' ? 'yes' : 'no';
+  } else if (lowerQuestion.includes('cape')) {
+    answer = targetCharacter.hascape ? 'yes' : 'no';
+  }
+  // If no specific attribute matched, give random answer
+  else {
+    answer = Math.random() > 0.5 ? 'yes' : 'no';
+  }
   
   // Broadcast question and answer
   broadcastToRoom(playerInfo.roomCode, {
     type: 'question_asked',
     payload: {
-      player: room.players.find(p => p.ws === ws).name,
+      player: askingPlayer.name,
       question,
-      answer
+      answer,
+      wasIntelligent: answer !== (Math.random() > 0.5 ? 'yes' : 'no') // indicate if it was a smart answer
     }
   });
   

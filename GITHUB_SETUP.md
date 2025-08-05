@@ -20,6 +20,9 @@ After creating the repository, GitHub will show you commands. Use these:
 # Add GitHub as remote origin (replace YOUR_USERNAME with your GitHub username)
 git remote add origin https://github.com/YOUR_USERNAME/guest-quest-simple.git
 
+# Example for AnuGnane:
+# git remote add origin https://github.com/AnuGnane/guest-quest-simple.git
+
 # Rename main branch to 'main' (optional, GitHub prefers 'main' over 'master')
 git branch -M main
 

@@ -47,7 +47,16 @@
         <div id="game-screen" class="screen" style="display: none;">
             <div class="game-info">
                 <div id="your-character">Your character: <strong id="character-name"></strong></div>
+                <div id="character-details"></div>
                 <div id="current-turn">Current turn: <span id="turn-player"></span></div>
+            </div>
+            
+            <div class="help-section">
+                <button id="toggle-help" onclick="toggleHelp()">💡 Show Question Hints</button>
+                <div id="question-hints" style="display: none;">
+                    <h4>Smart Questions You Can Ask:</h4>
+                    <div id="hint-content"></div>
+                </div>
             </div>
             
             <div class="game-actions">
@@ -59,6 +68,24 @@
                 <div class="characters-grid">
                     <h4>Make a guess:</h4>
                     <div id="characters-list"></div>
+                </div>
+            </div>
+            
+            <div class="game-stats">
+                <h4>Game Statistics:</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Questions Asked:</span>
+                        <span id="questions-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Guesses Made:</span>
+                        <span id="guesses-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Turn:</span>
+                        <span id="turn-count">1</span>
+                    </div>
                 </div>
             </div>
             

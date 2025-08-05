@@ -154,6 +154,97 @@ button:disabled {
     margin-bottom: 0.5rem;
 }
 
+#character-details {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+.help-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#toggle-help {
+    background: #28a745;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+#toggle-help:hover {
+    background: #218838;
+}
+
+#question-hints {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 5px;
+    border-left: 4px solid #28a745;
+}
+
+#question-hints h4 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.hint-category {
+    margin-bottom: 0.75rem;
+}
+
+.hint-category strong {
+    color: #28a745;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.hint-examples {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: 1rem;
+}
+
+.game-stats {
+    background: #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.game-stats h4 {
+    margin-bottom: 0.75rem;
+    color: #333;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.stat-item span:last-child {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
 .game-actions {
     margin-bottom: 1.5rem;
 }
