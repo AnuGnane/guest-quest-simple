@@ -17,6 +17,10 @@ class GuestQuestGame {
         this.availablePowerUps = {};
         this.isMyTurn = false;
         this.eliminatedCharacters = new Set();
+        this.eliminationHistory = [];
+        this.eliminationRedoStack = [];
+        this.turnTimer = null;
+        this.timeRemaining = 0;
         
         this.init();
     }
@@ -114,6 +118,10 @@ class GuestQuestGame {
         
         this.playerName = username;
         document.getElementById('display-username').textContent = username;
+        document.getElementById('current-username').textContent = username;
+        
+        // Show username in header
+        document.getElementById('user-display').style.display = 'block';
         
         // Hide username screen, show room selection
         document.getElementById('username-screen').style.display = 'none';
@@ -146,6 +154,9 @@ class GuestQuestGame {
                 break;
             case 'turn_changed':
                 this.handleTurnChanged(payload);
+                break;
+            case 'turn_timeout':
+                this.handleTurnTimeout(payload);
                 break;
             case 'guess_made':
                 this.handleGuessMade(payload);
@@ -328,11 +339,8 @@ class GuestQuestGame {
         document.getElementById('turn-player').textContent = payload.currentTurn;
         this.isMyTurn = payload.currentTurn === this.playerName;
         
-        // Create character buttons
-        this.createCharacterButtons();
-        
-        // Create elimination board
-        this.createEliminationBoard();
+        // Create unified board
+        this.createUnifiedBoard();
         
         // Setup question hints
         this.setupQuestionHints();
@@ -507,11 +515,120 @@ class GuestQuestGame {
         }
     }
     
-    clearEliminated() {
-        this.eliminatedCharacters.clear();
-        document.querySelectorAll('.elimination-character').forEach(el => {
-            el.classList.remove('eliminated');
+    createUnifiedBoard() {
+        const unifiedBoard = document.getElementById('unified-board');
+        unifiedBoard.innerHTML = '';
+        
+        this.characters.forEach(character => {
+            const charEl = document.createElement('div');
+            charEl.className = 'unified-character';
+            charEl.setAttribute('data-character', character.name);
+            
+            // Left click for guess, right click for elimination
+            charEl.onclick = (e) => {
+                e.preventDefault();
+                this.makeGuess(character.name);
+            };
+            
+            charEl.oncontextmenu = (e) => {
+                e.preventDefault();
+                this.toggleElimination(character.name);
+            };
+            
+            charEl.innerHTML = `
+                <img src="${character.image}" alt="${character.name}" class="character-image" 
+                     onerror="this.src='/images/characters/user.png'">
+                <div class="character-name">${character.name}</div>
+                <div class="elimination-overlay">❌</div>
+            `;
+            
+            unifiedBoard.appendChild(charEl);
         });
+    }
+    
+    toggleElimination(characterName) {
+        const charEl = document.querySelector(`[data-character="${characterName}"]`);
+        if (!charEl) return;
+        
+        // Save state for undo
+        this.eliminationHistory.push(new Set(this.eliminatedCharacters));
+        this.eliminationRedoStack = []; // Clear redo stack
+        
+        if (this.eliminatedCharacters.has(characterName)) {
+            this.eliminatedCharacters.delete(characterName);
+            charEl.classList.remove('eliminated');
+        } else {
+            this.eliminatedCharacters.add(characterName);
+            charEl.classList.add('eliminated');
+        }
+        
+        this.updateEliminationVisibility();
+    }
+    
+    updateEliminationVisibility() {
+        const showEliminations = document.getElementById('show-eliminations').checked;
+        document.querySelectorAll('.unified-character.eliminated').forEach(el => {
+            el.style.display = showEliminations ? 'flex' : 'none';
+        });
+    }
+    
+    undoElimination() {
+        if (this.eliminationHistory.length === 0) return;
+        
+        // Save current state for redo
+        this.eliminationRedoStack.push(new Set(this.eliminatedCharacters));
+        
+        // Restore previous state
+        this.eliminatedCharacters = this.eliminationHistory.pop();
+        
+        // Update UI
+        document.querySelectorAll('.unified-character').forEach(el => {
+            const characterName = el.getAttribute('data-character');
+            if (this.eliminatedCharacters.has(characterName)) {
+                el.classList.add('eliminated');
+            } else {
+                el.classList.remove('eliminated');
+            }
+        });
+        
+        this.updateEliminationVisibility();
+    }
+    
+    redoElimination() {
+        if (this.eliminationRedoStack.length === 0) return;
+        
+        // Save current state for undo
+        this.eliminationHistory.push(new Set(this.eliminatedCharacters));
+        
+        // Restore redo state
+        this.eliminatedCharacters = this.eliminationRedoStack.pop();
+        
+        // Update UI
+        document.querySelectorAll('.unified-character').forEach(el => {
+            const characterName = el.getAttribute('data-character');
+            if (this.eliminatedCharacters.has(characterName)) {
+                el.classList.add('eliminated');
+            } else {
+                el.classList.remove('eliminated');
+            }
+        });
+        
+        this.updateEliminationVisibility();
+    }
+    
+    resetBoard() {
+        if (confirm('Reset all eliminations?')) {
+            // Save state for undo
+            this.eliminationHistory.push(new Set(this.eliminatedCharacters));
+            this.eliminationRedoStack = [];
+            
+            this.eliminatedCharacters.clear();
+            document.querySelectorAll('.unified-character').forEach(el => {
+                el.classList.remove('eliminated');
+            });
+            
+            this.updateEliminationVisibility();
+        }
     }
     
     createCharacterButtons() {
@@ -563,15 +680,65 @@ class GuestQuestGame {
         this.isMyTurn = payload.currentTurn === this.playerName;
         this.updateTurnControls();
         
+        // Start turn timer
+        this.startTurnTimer(payload.timeRemaining || 60);
+        
         // Visual feedback for turn change
         const turnEl = document.getElementById('current-turn');
         if (this.isMyTurn) {
             turnEl.style.background = '#d4edda';
             turnEl.style.color = '#155724';
-            this.addLogMessage('🎯 It\'s your turn!');
+            this.addLogMessage('🎯 It\'s your turn! (60 seconds)');
         } else {
             turnEl.style.background = '#f8d7da';
             turnEl.style.color = '#721c24';
+        }
+    }
+    
+    startTurnTimer(seconds) {
+        // Clear existing timer
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+        }
+        
+        this.timeRemaining = seconds;
+        this.updateTimerDisplay();
+        
+        this.turnTimer = setInterval(() => {
+            this.timeRemaining--;
+            this.updateTimerDisplay();
+            
+            if (this.timeRemaining <= 0) {
+                clearInterval(this.turnTimer);
+                this.turnTimer = null;
+            }
+        }, 1000);
+    }
+    
+    updateTimerDisplay() {
+        const timerEl = document.getElementById('turn-timer');
+        if (timerEl) {
+            timerEl.textContent = `${this.timeRemaining}s`;
+            
+            // Change color based on time remaining
+            if (this.timeRemaining <= 10) {
+                timerEl.style.color = '#dc3545';
+                timerEl.style.fontWeight = 'bold';
+            } else if (this.timeRemaining <= 30) {
+                timerEl.style.color = '#fd7e14';
+                timerEl.style.fontWeight = 'bold';
+            } else {
+                timerEl.style.color = '#28a745';
+                timerEl.style.fontWeight = 'normal';
+            }
+        }
+    }
+    
+    handleTurnTimeout(payload) {
+        this.addLogMessage(`⏰ ${payload.player}'s turn ended due to timeout`);
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+            this.turnTimer = null;
         }
     }
     
@@ -724,8 +891,20 @@ function showTab(tabName) {
     }
 }
 
-function clearEliminated() {
-    game.clearEliminated();
+function toggleEliminations() {
+    game.updateEliminationVisibility();
+}
+
+function undoElimination() {
+    game.undoElimination();
+}
+
+function redoElimination() {
+    game.redoElimination();
+}
+
+function resetBoard() {
+    game.resetBoard();
 }
 
 function toggleHelp() {

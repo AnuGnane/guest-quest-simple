@@ -399,13 +399,6 @@ function askQuestion(ws, payload) {
     answer = Math.random() > 0.5 ? 'yes' : 'no';
   }
 
-  // Mark question as asked
-  if (room.turnActions.doubleQuestionActive) {
-    room.turnActions.doubleQuestionActive = false; // Used up double question
-  } else {
-    room.turnActions.questionAsked = true;
-  }
-
   // Broadcast question and answer
   broadcastToRoom(playerInfo.roomCode, {
     type: 'question_asked',
@@ -417,7 +410,14 @@ function askQuestion(ws, payload) {
     }
   });
 
-  // Don't automatically advance turn - let player choose to ask another question, use power-up, or make guess
+  // Questions always end the turn (unless double question is active)
+  if (room.turnActions.doubleQuestionActive) {
+    room.turnActions.doubleQuestionActive = false; // Used up double question
+    room.turnActions.questionAsked = true; // Mark first question as asked
+  } else {
+    // End turn after question
+    endTurn(room);
+  }
 }
 
 function makeGuess(ws, payload) {
@@ -515,6 +515,15 @@ function usePowerUp(ws, payload) {
     ws.send(JSON.stringify({
       type: 'error',
       payload: { message: 'You can only use one power-up per turn!' }
+    }));
+    return;
+  }
+  
+  // Check if question already asked (power-ups must be used before questions)
+  if (room.turnActions.questionAsked) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Power-ups must be used before asking questions!' }
     }));
     return;
   }
@@ -628,6 +637,12 @@ function handleEndTurn(ws, payload) {
 }
 
 function endTurn(room) {
+  // Clear existing timer
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = null;
+  }
+  
   // Reset turn actions
   room.turnActions = {
     questionAsked: false,
@@ -643,11 +658,29 @@ function endTurn(room) {
   // Move to next turn
   room.currentTurn = (room.currentTurn + 1) % room.players.length;
   
+  // Start timer for new turn (60 seconds)
+  room.turnTimer = setTimeout(() => {
+    console.log(`Turn timer expired for room ${room.code}`);
+    
+    // Check if room and players still exist
+    if (room.players && room.players[room.currentTurn]) {
+      broadcastToRoom(room.code, {
+        type: 'turn_timeout',
+        payload: { 
+          player: room.players[room.currentTurn].name,
+          message: 'Turn ended due to timeout'
+        }
+      });
+      endTurn(room);
+    }
+  }, 60000); // 60 seconds
+  
   broadcastToRoom(room.code, {
     type: 'turn_changed',
     payload: { 
       currentTurn: room.players[room.currentTurn].name,
-      turnActions: room.turnActions
+      turnActions: room.turnActions,
+      timeRemaining: 60
     }
   });
 }

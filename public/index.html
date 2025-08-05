@@ -8,7 +8,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Guest Quest</h1>
+        <div class="header">
+            <h1>🎮 Guest Quest</h1>
+            <div id="user-display" class="user-display" style="display: none;">
+                Playing as: <strong id="current-username"></strong>
+            </div>
+        </div>
         
         <!-- Connection Status -->
         <div id="connection-status" class="status">Connecting...</div>
@@ -80,7 +85,10 @@
             <div class="game-info">
                 <div id="your-character">Your character: <strong id="character-name"></strong></div>
                 <div id="character-details"></div>
-                <div id="current-turn">Current turn: <span id="turn-player"></span></div>
+                <div id="current-turn">
+                    Current turn: <span id="turn-player"></span>
+                    <span id="turn-timer" class="turn-timer">60s</span>
+                </div>
             </div>
             
             <div class="powerups-section">
@@ -104,23 +112,25 @@
                 </div>
                 
                 <div class="characters-section">
-                    <div class="section-tabs">
-                        <button id="guess-tab" class="tab-btn active" onclick="showTab('guess')">🎯 Make Guess</button>
-                        <button id="eliminate-tab" class="tab-btn" onclick="showTab('eliminate')">❌ Elimination Board</button>
-                    </div>
-                    
-                    <div id="guess-content" class="tab-content">
-                        <h4>Click a character to guess:</h4>
-                        <div id="characters-list"></div>
-                    </div>
-                    
-                    <div id="eliminate-content" class="tab-content" style="display: none;">
-                        <h4>Click to eliminate characters:</h4>
-                        <div class="eliminate-controls">
-                            <button id="clear-eliminated" onclick="clearEliminated()">🔄 Clear All</button>
+                    <div class="board-controls">
+                        <h4>Characters Board</h4>
+                        <div class="board-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show-eliminations" onchange="toggleEliminations()" checked>
+                                <span class="slider"></span>
+                                Show Eliminations
+                            </label>
+                            <button id="undo-btn" onclick="undoElimination()">↶ Undo</button>
+                            <button id="redo-btn" onclick="redoElimination()">↷ Redo</button>
+                            <button id="reset-board-btn" onclick="resetBoard()">🔄 Reset</button>
                         </div>
-                        <div id="elimination-board"></div>
                     </div>
+                    
+                    <div class="board-instructions">
+                        <p><strong>Left click:</strong> Make a guess | <strong>Right click:</strong> Mark as eliminated</p>
+                    </div>
+                    
+                    <div id="unified-board" class="unified-board"></div>
                 </div>
             </div>
             

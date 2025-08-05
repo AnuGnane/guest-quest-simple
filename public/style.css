@@ -24,11 +24,35 @@ body {
     overflow-y: auto;
 }
 
-h1 {
-    text-align: center;
-    color: #333;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
+}
+
+h1 {
+    color: #333;
     font-size: 2.5rem;
+    margin: 0;
+}
+
+.user-display {
+    background: #e9ecef;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.turn-timer {
+    margin-left: 1rem;
+    padding: 0.25rem 0.5rem;
+    background: #28a745;
+    color: white;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
 .status {
@@ -599,6 +623,131 @@ button.ready:hover {
     padding: 1rem;
     border-radius: 0 5px 5px 5px;
     border: 1px solid #dee2e6;
+}
+
+/* Unified Board Styles */
+.board-controls {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.board-controls h4 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.board-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background-color: #667eea;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+#undo-btn, #redo-btn, #reset-board-btn {
+    background: #6c757d;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+}
+
+#undo-btn:hover, #redo-btn:hover, #reset-board-btn:hover {
+    background: #5a6268;
+}
+
+.board-instructions {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 5px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.unified-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.unified-character {
+    position: relative;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.unified-character:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.unified-character.eliminated {
+    opacity: 0.6;
+    border-color: #dc3545;
+}
+
+.unified-character.eliminated .elimination-overlay {
+    display: flex;
+}
+
+.unified-character:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .game-log {
