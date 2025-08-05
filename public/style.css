@@ -111,6 +111,14 @@ button:disabled {
     cursor: not-allowed;
 }
 
+button.ready {
+    background: #28a745;
+}
+
+button.ready:hover {
+    background: #218838;
+}
+
 .room-info {
     background: #f8f9fa;
     padding: 1.5rem;

@@ -189,10 +189,14 @@ class GuestQuestGame {
     
     toggleReady() {
         this.isReady = !this.isReady;
-        // In a real implementation, you'd send this to the server
-        // For now, we'll just update the UI
+        
+        // Send ready status to server
+        this.send('toggle_ready', { ready: this.isReady });
+        
+        // Update UI immediately for responsiveness
         const readyBtn = document.getElementById('ready-btn');
         readyBtn.textContent = this.isReady ? 'Not Ready' : 'Ready';
+        readyBtn.className = this.isReady ? 'ready' : '';
     }
     
     startGame() {

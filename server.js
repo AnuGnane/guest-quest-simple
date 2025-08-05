@@ -83,6 +83,9 @@ function handleMessage(ws, data) {
     case 'create_room':
       createRoom(ws, payload);
       break;
+    case 'toggle_ready':
+      toggleReady(ws, payload);
+      break;
     case 'start_game':
       startGame(ws, payload);
       break;
@@ -146,6 +149,33 @@ function joinRoom(ws, payload) {
   
   // Broadcast updated room state
   broadcastToRoom(roomCode, {
+    type: 'room_updated',
+    payload: {
+      players: room.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        ready: p.ready
+      })),
+      canStart: room.players.length >= 2 && room.players.every(p => p.ready)
+    }
+  });
+}
+
+function toggleReady(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+  
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room) return;
+  
+  // Find the player and toggle their ready status
+  const player = room.players.find(p => p.ws === ws);
+  if (!player) return;
+  
+  player.ready = !player.ready;
+  
+  // Broadcast updated room state
+  broadcastToRoom(playerInfo.roomCode, {
     type: 'room_updated',
     payload: {
       players: room.players.map(p => ({

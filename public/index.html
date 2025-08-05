@@ -65,9 +65,24 @@
                     <button id="ask-btn" onclick="askQuestion()">Ask Question</button>
                 </div>
                 
-                <div class="characters-grid">
-                    <h4>Make a guess:</h4>
-                    <div id="characters-list"></div>
+                <div class="characters-section">
+                    <div class="section-tabs">
+                        <button id="guess-tab" class="tab-btn active" onclick="showTab('guess')">🎯 Make Guess</button>
+                        <button id="eliminate-tab" class="tab-btn" onclick="showTab('eliminate')">❌ Elimination Board</button>
+                    </div>
+                    
+                    <div id="guess-content" class="tab-content">
+                        <h4>Click a character to guess:</h4>
+                        <div id="characters-list"></div>
+                    </div>
+                    
+                    <div id="eliminate-content" class="tab-content" style="display: none;">
+                        <h4>Click to eliminate characters:</h4>
+                        <div class="eliminate-controls">
+                            <button id="clear-eliminated" onclick="clearEliminated()">🔄 Clear All</button>
+                        </div>
+                        <div id="elimination-board"></div>
+                    </div>
                 </div>
             </div>
             
