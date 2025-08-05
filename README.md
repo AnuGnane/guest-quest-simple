@@ -9,7 +9,10 @@ A simplified multiplayer "Guess Who" style game built incrementally.
 - Minimal dependencies
 
 ## Current Status
-- 🚧 Project setup in progress
+- ✅ Basic multiplayer game functionality complete
+- ✅ Enhanced character sets with attributes
+- ✅ Character set selection (Classic & Superheroes)
+- 🚧 Continuing to add features incrementally
 
 ## Tech Stack (Minimal)
 - **Frontend**: Vanilla HTML/CSS/JavaScript (no frameworks initially)
@@ -20,15 +23,16 @@ A simplified multiplayer "Guess Who" style game built incrementally.
 ## Getting Started
 ```bash
 npm install
-npm run dev
+npm start
 ```
 
 ## Development Approach
 We'll build this step by step:
-1. Basic HTML page with game interface
-2. Simple Node.js server
-3. WebSocket connection
-4. Game logic implementation
-5. Polish and enhance
+1. ✅ Basic HTML page with game interface
+2. ✅ Simple Node.js server
+3. ✅ WebSocket connection
+4. ✅ Game logic implementation
+5. ✅ Enhanced character sets
+6. 🚧 Polish and enhance
 
 This keeps things simple and testable at each step.
