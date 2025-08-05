@@ -10,17 +10,46 @@ const wss = new WebSocket.Server({ server });
 // Serve static files
 app.use(express.static('public'));
 
+// API endpoint for character sets
+app.get('/api/character-sets', (req, res) => {
+  const sets = {};
+  Object.keys(characterSets).forEach(key => {
+    sets[key] = characterSets[key].map(char => char.name);
+  });
+  res.json(sets);
+});
+
 // Game state
 const gameState = {
   rooms: new Map(),
   players: new Map()
 };
 
-// Character sets (simplified)
+// Character sets with attributes for better gameplay
 const characterSets = {
   classic: [
-    'Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank',
-    'Grace', 'Henry', 'Ivy', 'Jack', 'Kate', 'Leo'
+    { name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young' },
+    { name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle' },
+    { name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old' },
+    { name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young' },
+    { name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle' },
+    { name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old' },
+    { name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young' },
+    { name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle' },
+    { name: 'Ivy', gender: 'female', hairColor: 'black', hasGlasses: true, age: 'old' },
+    { name: 'Jack', gender: 'male', hairColor: 'red', hasGlasses: false, age: 'young' },
+    { name: 'Kate', gender: 'female', hairColor: 'blonde', hasGlasses: true, age: 'middle' },
+    { name: 'Leo', gender: 'male', hairColor: 'brown', hasGlasses: false, age: 'old' }
+  ],
+  superheroes: [
+    { name: 'Superman', gender: 'male', power: 'flight', team: 'Justice League', hascape: true },
+    { name: 'Wonder Woman', gender: 'female', power: 'strength', team: 'Justice League', hascape: false },
+    { name: 'Batman', gender: 'male', power: 'gadgets', team: 'Justice League', hascape: true },
+    { name: 'Spider-Man', gender: 'male', power: 'webs', team: 'Avengers', hascape: false },
+    { name: 'Iron Man', gender: 'male', power: 'technology', team: 'Avengers', hascape: false },
+    { name: 'Captain Marvel', gender: 'female', power: 'energy', team: 'Avengers', hascape: true },
+    { name: 'Flash', gender: 'male', power: 'speed', team: 'Justice League', hascape: false },
+    { name: 'Black Widow', gender: 'female', power: 'stealth', team: 'Avengers', hascape: false }
   ]
 };
 
@@ -70,19 +99,25 @@ function handleMessage(ws, data) {
 
 function createRoom(ws, payload) {
   const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const { characterSet = 'classic' } = payload;
+  
   const room = {
     code: roomCode,
     players: [],
     gameStarted: false,
     currentTurn: 0,
-    characters: [...characterSets.classic]
+    characterSet: characterSet,
+    characters: [...characterSets[characterSet] || characterSets.classic]
   };
   
   gameState.rooms.set(roomCode, room);
   
   ws.send(JSON.stringify({
     type: 'room_created',
-    payload: { roomCode }
+    payload: { 
+      roomCode,
+      availableCharacterSets: Object.keys(characterSets)
+    }
   }));
 }
 
@@ -146,7 +181,9 @@ function startGame(ws, payload) {
       payload: {
         yourCharacter: player.character,
         currentTurn: room.players[room.currentTurn].name,
-        players: room.players.map(p => p.name)
+        players: room.players.map(p => p.name),
+        allCharacters: room.characters.map(char => char.name),
+        characterSet: room.characterSet
       }
     }));
   });
@@ -194,7 +231,7 @@ function makeGuess(ws, payload) {
   
   // Check if guess is correct (find the target player's character)
   const targetPlayer = room.players.find(p => p !== guessingPlayer);
-  const isCorrect = targetPlayer && targetPlayer.character === character;
+  const isCorrect = targetPlayer && targetPlayer.character.name === character;
   
   if (isCorrect) {
     // Game over
@@ -202,7 +239,8 @@ function makeGuess(ws, payload) {
       type: 'game_over',
       payload: {
         winner: guessingPlayer.name,
-        character: character
+        character: character,
+        targetCharacter: targetPlayer.character
       }
     });
   } else {

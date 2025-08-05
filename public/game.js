@@ -5,7 +5,8 @@ class GuestQuestGame {
         this.roomCode = '';
         this.isReady = false;
         this.gameStarted = false;
-        this.characters = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack', 'Kate', 'Leo'];
+        this.characters = [];
+        this.characterSets = {};
         
         this.init();
     }
@@ -13,6 +14,17 @@ class GuestQuestGame {
     init() {
         this.connect();
         this.setupEventListeners();
+        this.loadCharacterSets();
+    }
+    
+    async loadCharacterSets() {
+        try {
+            const response = await fetch('/api/character-sets');
+            this.characterSets = await response.json();
+            console.log('Character sets loaded:', this.characterSets);
+        } catch (error) {
+            console.error('Failed to load character sets:', error);
+        }
     }
     
     connect() {
@@ -98,14 +110,20 @@ class GuestQuestGame {
     
     createRoom() {
         const nameInput = document.getElementById('player-name');
+        const characterSetSelect = document.getElementById('character-set-select');
+        
         this.playerName = nameInput.value.trim();
+        const selectedCharacterSet = characterSetSelect.value;
         
         if (!this.playerName) {
             alert('Please enter your name');
             return;
         }
         
-        this.send('create_room', { playerName: this.playerName });
+        this.send('create_room', { 
+            playerName: this.playerName,
+            characterSet: selectedCharacterSet
+        });
     }
     
     handleRoomCreated(payload) {
@@ -178,13 +196,14 @@ class GuestQuestGame {
     
     handleGameStarted(payload) {
         this.gameStarted = true;
+        this.characters = payload.allCharacters;
         
         // Hide lobby, show game
         document.getElementById('lobby-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
         
         // Set character
-        document.getElementById('character-name').textContent = payload.yourCharacter;
+        document.getElementById('character-name').textContent = payload.yourCharacter.name;
         
         // Set current turn
         document.getElementById('turn-player').textContent = payload.currentTurn;
@@ -192,7 +211,7 @@ class GuestQuestGame {
         // Create character buttons
         this.createCharacterButtons();
         
-        this.addLogMessage(`Game started! Your character is ${payload.yourCharacter}`);
+        this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
     }
     
     createCharacterButtons() {

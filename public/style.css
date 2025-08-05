@@ -53,18 +53,26 @@ h1 {
     margin-bottom: 1rem;
 }
 
-input[type="text"] {
+input[type="text"], select {
     width: 100%;
     padding: 0.75rem;
     border: 2px solid #ddd;
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s;
+    background: white;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus, select:focus {
     outline: none;
     border-color: #667eea;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #333;
 }
 
 .button-group {
