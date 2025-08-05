@@ -425,6 +425,15 @@ button.ready:hover {
     flex: 1;
 }
 
+#end-turn-btn {
+    background: #fd7e14;
+    white-space: nowrap;
+}
+
+#end-turn-btn:hover {
+    background: #e8590c;
+}
+
 .characters-grid h4 {
     margin-bottom: 1rem;
     color: #333;

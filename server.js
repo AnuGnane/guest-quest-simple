@@ -25,24 +25,12 @@ const powerUps = {
     name: 'Reveal Attribute',
     description: 'Reveals a random attribute of the target character',
     icon: '🔍',
-    uses: 1
-  },
-  category_scan: {
-    name: 'Category Scan',
-    description: 'Ask about an entire category (e.g., all occupations)',
-    icon: '📊',
-    uses: 1
+    uses: 2
   },
   double_question: {
     name: 'Double Question',
     description: 'Ask two questions in one turn',
     icon: '❓❓',
-    uses: 1
-  },
-  truth_serum: {
-    name: 'Truth Serum',
-    description: 'Next question gets a guaranteed accurate answer',
-    icon: '💉',
     uses: 1
   },
   elimination_hint: {
@@ -62,97 +50,37 @@ const gameState = {
 // Enhanced character sets with rich categories and attributes
 const characterSets = {
   classic: [
-    { 
+    {
       name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young',
       occupation: 'teacher', hobby: 'reading', personality: 'cheerful', location: 'city'
     },
-    { 
+    {
       name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle',
       occupation: 'engineer', hobby: 'gaming', personality: 'analytical', location: 'suburbs'
     },
-    { 
+    {
       name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old',
       occupation: 'retired', hobby: 'gardening', personality: 'wise', location: 'countryside'
     },
-    { 
+    {
       name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young',
       occupation: 'artist', hobby: 'painting', personality: 'creative', location: 'city'
     },
-    { 
+    {
       name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle',
       occupation: 'doctor', hobby: 'hiking', personality: 'caring', location: 'city'
     },
-    { 
+    {
       name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old',
       occupation: 'professor', hobby: 'chess', personality: 'intellectual', location: 'city'
     },
-    { 
+    {
       name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young',
       occupation: 'chef', hobby: 'cooking', personality: 'energetic', location: 'city'
     },
-    { 
+    {
       name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle',
       occupation: 'pilot', hobby: 'flying', personality: 'adventurous', location: 'suburbs'
-    }
-  ],
-  superheroes: [
-    { 
-      name: 'Superman', gender: 'male', power: 'flight', team: 'Justice League', hascape: true,
-      weakness: 'kryptonite', origin: 'alien', morality: 'hero', element: 'none'
-    },
-    { 
-      name: 'Wonder Woman', gender: 'female', power: 'strength', team: 'Justice League', hascape: false,
-      weakness: 'binding', origin: 'mythological', morality: 'hero', element: 'none'
-    },
-    { 
-      name: 'Batman', gender: 'male', power: 'gadgets', team: 'Justice League', hascape: true,
-      weakness: 'human', origin: 'human', morality: 'hero', element: 'none'
-    },
-    { 
-      name: 'Spider-Man', gender: 'male', power: 'webs', team: 'Avengers', hascape: false,
-      weakness: 'responsibility', origin: 'mutated', morality: 'hero', element: 'none'
-    },
-    { 
-      name: 'Iron Man', gender: 'male', power: 'technology', team: 'Avengers', hascape: false,
-      weakness: 'arc reactor', origin: 'human', morality: 'hero', element: 'metal'
-    },
-    { 
-      name: 'Doctor Strange', gender: 'male', power: 'magic', team: 'Avengers', hascape: true,
-      weakness: 'arrogance', origin: 'human', morality: 'hero', element: 'mystic'
-    },
-    { 
-      name: 'Storm', gender: 'female', power: 'weather', team: 'X-Men', hascape: false,
-      weakness: 'claustrophobia', origin: 'mutant', morality: 'hero', element: 'air'
-    },
-    { 
-      name: 'Aquaman', gender: 'male', power: 'water', team: 'Justice League', hascape: false,
-      weakness: 'dehydration', origin: 'atlantean', morality: 'hero', element: 'water'
-    }
-  ],
-  fantasy: [
-    { 
-      name: 'Gandalf', gender: 'male', race: 'wizard', weapon: 'staff', age: 'ancient',
-      magic: 'light', homeland: 'valinor', quest: 'ring bearer', alignment: 'good'
-    },
-    { 
-      name: 'Legolas', gender: 'male', race: 'elf', weapon: 'bow', age: 'immortal',
-      magic: 'nature', homeland: 'mirkwood', quest: 'fellowship', alignment: 'good'
-    },
-    { 
-      name: 'Gimli', gender: 'male', race: 'dwarf', weapon: 'axe', age: 'mature',
-      magic: 'none', homeland: 'erebor', quest: 'fellowship', alignment: 'good'
-    },
-    { 
-      name: 'Arwen', gender: 'female', race: 'elf', weapon: 'sword', age: 'immortal',
-      magic: 'healing', homeland: 'rivendell', quest: 'love', alignment: 'good'
-    },
-    { 
-      name: 'Sauron', gender: 'male', race: 'maia', weapon: 'ring', age: 'ancient',
-      magic: 'dark', homeland: 'mordor', quest: 'domination', alignment: 'evil'
-    },
-    { 
-      name: 'Galadriel', gender: 'female', race: 'elf', weapon: 'ring', age: 'ancient',
-      magic: 'light', homeland: 'lothlorien', quest: 'protection', alignment: 'good'
     }
   ]
 };
@@ -160,7 +88,7 @@ const characterSets = {
 // WebSocket connection handling
 wss.on('connection', (ws) => {
   console.log('New client connected');
-  
+
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
@@ -169,7 +97,7 @@ wss.on('connection', (ws) => {
       console.error('Error parsing message:', error);
     }
   });
-  
+
   ws.on('close', () => {
     console.log('Client disconnected');
     // Handle player disconnect
@@ -179,7 +107,7 @@ wss.on('connection', (ws) => {
 
 function handleMessage(ws, data) {
   const { type, payload } = data;
-  
+
   switch (type) {
     case 'join_room':
       joinRoom(ws, payload);
@@ -202,6 +130,9 @@ function handleMessage(ws, data) {
     case 'use_powerup':
       usePowerUp(ws, payload);
       break;
+    case 'end_turn':
+      handleEndTurn(ws, payload);
+      break;
     case 'leave_room':
       leaveRoom(ws, payload);
       break;
@@ -213,21 +144,26 @@ function handleMessage(ws, data) {
 function createRoom(ws, payload) {
   const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
   const { characterSet = 'classic' } = payload;
-  
+
   const room = {
     code: roomCode,
     players: [],
     gameStarted: false,
     currentTurn: 0,
     characterSet: characterSet,
-    characters: [...characterSets[characterSet] || characterSets.classic]
+    characters: [...characterSets[characterSet] || characterSets.classic],
+    turnActions: {
+      questionAsked: false,
+      powerUpUsed: false,
+      guessMade: false
+    }
   };
-  
+
   gameState.rooms.set(roomCode, room);
-  
+
   ws.send(JSON.stringify({
     type: 'room_created',
-    payload: { 
+    payload: {
       roomCode,
       availableCharacterSets: Object.keys(characterSets)
     }
@@ -237,7 +173,7 @@ function createRoom(ws, payload) {
 function joinRoom(ws, payload) {
   const { roomCode, playerName } = payload;
   const room = gameState.rooms.get(roomCode);
-  
+
   if (!room) {
     ws.send(JSON.stringify({
       type: 'error',
@@ -245,7 +181,7 @@ function joinRoom(ws, payload) {
     }));
     return;
   }
-  
+
   // Check if player is already in this room
   const existingPlayer = room.players.find(p => p.name === playerName);
   if (existingPlayer) {
@@ -255,7 +191,7 @@ function joinRoom(ws, payload) {
     }));
     return;
   }
-  
+
   // Check if this WebSocket is already in a room
   const existingPlayerInfo = gameState.players.get(ws);
   if (existingPlayerInfo) {
@@ -265,7 +201,7 @@ function joinRoom(ws, payload) {
     }));
     return;
   }
-  
+
   // Check if game has already started
   if (room.gameStarted) {
     ws.send(JSON.stringify({
@@ -274,7 +210,7 @@ function joinRoom(ws, payload) {
     }));
     return;
   }
-  
+
   const player = {
     id: Math.random().toString(36).substring(2),
     name: playerName,
@@ -282,12 +218,12 @@ function joinRoom(ws, payload) {
     character: null,
     ready: false
   };
-  
+
   room.players.push(player);
   gameState.players.set(ws, { playerId: player.id, roomCode });
-  
+
   console.log(`Player ${playerName} joined room ${roomCode}`);
-  
+
   // Broadcast updated room state
   broadcastToRoom(roomCode, {
     type: 'room_updated',
@@ -305,16 +241,16 @@ function joinRoom(ws, payload) {
 function toggleReady(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room) return;
-  
+
   // Find the player and toggle their ready status
   const player = room.players.find(p => p.ws === ws);
   if (!player) return;
-  
+
   player.ready = !player.ready;
-  
+
   // Broadcast updated room state
   broadcastToRoom(playerInfo.roomCode, {
     type: 'room_updated',
@@ -332,27 +268,26 @@ function toggleReady(ws, payload) {
 function startGame(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room || room.players.length < 2) return;
-  
+
   // Assign random characters
   const shuffledCharacters = [...room.characters].sort(() => Math.random() - 0.5);
   room.players.forEach((player, index) => {
     player.character = shuffledCharacters[index];
     // Give each player power-ups
     player.powerUps = {
-      reveal_attribute: 1,
-      category_scan: 1,
+      reveal_attribute: 2,
       double_question: 1,
-      truth_serum: 1,
       elimination_hint: 1
     };
+    player.powerUpCooldown = false; // Can't use power-up next turn if used this turn
   });
-  
+
   room.gameStarted = true;
   room.currentTurn = 0;
-  
+
   // Send game start to all players
   room.players.forEach(player => {
     player.ws.send(JSON.stringify({
@@ -373,21 +308,40 @@ function startGame(ws, payload) {
 function askQuestion(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room || !room.gameStarted) return;
-  
-  const { question } = payload;
+
   const askingPlayer = room.players.find(p => p.ws === ws);
   
+  // Check if it's the player's turn
+  if (room.players[room.currentTurn] !== askingPlayer) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'It\'s not your turn!' }
+    }));
+    return;
+  }
+  
+  // Check if question already asked this turn (unless double question power-up was used)
+  if (room.turnActions.questionAsked && !room.turnActions.doubleQuestionActive) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You can only ask one question per turn!' }
+    }));
+    return;
+  }
+
+  const { question } = payload;
+
   // Find the target player (the one being asked about)
   const targetPlayer = room.players.find(p => p !== askingPlayer);
   const targetCharacter = targetPlayer.character;
-  
+
   // Smart answer based on character attributes
   let answer = 'no'; // default
   const lowerQuestion = question.toLowerCase();
-  
+
   // Check for attribute-based questions
   if (lowerQuestion.includes('male') || lowerQuestion.includes('man') || lowerQuestion.includes('boy')) {
     answer = targetCharacter.gender === 'male' ? 'yes' : 'no';
@@ -411,7 +365,7 @@ function askQuestion(ws, payload) {
     answer = targetCharacter.age === 'old' ? 'yes' : 'no';
   } else if (lowerQuestion.includes('middle') || lowerQuestion.includes('middle-aged')) {
     answer = targetCharacter.age === 'middle' ? 'yes' : 'no';
-  } 
+  }
   // Superhero specific questions
   else if (lowerQuestion.includes('fly') || lowerQuestion.includes('flight')) {
     answer = targetCharacter.power === 'flight' ? 'yes' : 'no';
@@ -428,7 +382,14 @@ function askQuestion(ws, payload) {
   else {
     answer = Math.random() > 0.5 ? 'yes' : 'no';
   }
-  
+
+  // Mark question as asked
+  if (room.turnActions.doubleQuestionActive) {
+    room.turnActions.doubleQuestionActive = false; // Used up double question
+  } else {
+    room.turnActions.questionAsked = true;
+  }
+
   // Broadcast question and answer
   broadcastToRoom(playerInfo.roomCode, {
     type: 'question_asked',
@@ -439,29 +400,43 @@ function askQuestion(ws, payload) {
       wasIntelligent: answer !== (Math.random() > 0.5 ? 'yes' : 'no') // indicate if it was a smart answer
     }
   });
-  
-  // Next turn
-  room.currentTurn = (room.currentTurn + 1) % room.players.length;
-  broadcastToRoom(playerInfo.roomCode, {
-    type: 'turn_changed',
-    payload: { currentTurn: room.players[room.currentTurn].name }
-  });
+
+  // Don't automatically advance turn - let player choose to ask another question, use power-up, or make guess
 }
 
 function makeGuess(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room || !room.gameStarted) return;
-  
-  const { character } = payload;
+
   const guessingPlayer = room.players.find(p => p.ws === ws);
   
+  // Check if it's the player's turn
+  if (room.players[room.currentTurn] !== guessingPlayer) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'It\'s not your turn!' }
+    }));
+    return;
+  }
+  
+  // Check if guess already made this turn
+  if (room.turnActions.guessMade) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You can only make one guess per turn!' }
+    }));
+    return;
+  }
+
+  const { character } = payload;
+
   // Check if guess is correct (find the target player's character)
   const targetPlayer = room.players.find(p => p !== guessingPlayer);
   const isCorrect = targetPlayer && targetPlayer.character.name === character;
-  
+
   if (isCorrect) {
     // Game over
     broadcastToRoom(playerInfo.roomCode, {
@@ -473,7 +448,9 @@ function makeGuess(ws, payload) {
       }
     });
   } else {
-    // Wrong guess, next turn
+    // Wrong guess, mark as made and end turn
+    room.turnActions.guessMade = true;
+    
     broadcastToRoom(playerInfo.roomCode, {
       type: 'guess_made',
       payload: {
@@ -482,19 +459,16 @@ function makeGuess(ws, payload) {
         correct: false
       }
     });
-    
-    room.currentTurn = (room.currentTurn + 1) % room.players.length;
-    broadcastToRoom(playerInfo.roomCode, {
-      type: 'turn_changed',
-      payload: { currentTurn: room.players[room.currentTurn].name }
-    });
+
+    // End turn after wrong guess
+    endTurn(room);
   }
 }
 
 function broadcastToRoom(roomCode, message) {
   const room = gameState.rooms.get(roomCode);
   if (!room) return;
-  
+
   room.players.forEach(player => {
     if (player.ws.readyState === WebSocket.OPEN) {
       player.ws.send(JSON.stringify(message));
@@ -505,13 +479,41 @@ function broadcastToRoom(roomCode, message) {
 function usePowerUp(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room || !room.gameStarted) return;
-  
-  const { powerUpType } = payload;
+
   const player = room.players.find(p => p.ws === ws);
   
+  // Check if it's the player's turn
+  if (room.players[room.currentTurn] !== player) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'It\'s not your turn!' }
+    }));
+    return;
+  }
+  
+  // Check if power-up already used this turn
+  if (room.turnActions.powerUpUsed) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You can only use one power-up per turn!' }
+    }));
+    return;
+  }
+  
+  // Check if player is on power-up cooldown
+  if (player.powerUpCooldown) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You cannot use power-ups this turn (cooldown from last use)!' }
+    }));
+    return;
+  }
+
+  const { powerUpType } = payload;
+
   if (!player || !player.powerUps[powerUpType] || player.powerUps[powerUpType] <= 0) {
     ws.send(JSON.stringify({
       type: 'error',
@@ -519,13 +521,15 @@ function usePowerUp(ws, payload) {
     }));
     return;
   }
-  
+
   // Use the power-up
   player.powerUps[powerUpType]--;
-  
+  room.turnActions.powerUpUsed = true;
+  player.powerUpCooldown = true; // Set cooldown for next turn
+
   const targetPlayer = room.players.find(p => p !== player);
   let result = {};
-  
+
   switch (powerUpType) {
     case 'reveal_attribute':
       const attributes = Object.keys(targetPlayer.character).filter(key => key !== 'name');
@@ -536,16 +540,7 @@ function usePowerUp(ws, payload) {
         value: targetPlayer.character[randomAttr]
       };
       break;
-      
-    case 'category_scan':
-      // For now, reveal all possible values in a category
-      const categories = getCharacterCategories(room.characterSet);
-      result = {
-        type: 'category_scan',
-        categories: categories
-      };
-      break;
-      
+
     case 'elimination_hint':
       const allChars = room.characters.filter(char => char.name !== targetPlayer.character.name);
       const eliminated = allChars.sort(() => Math.random() - 0.5).slice(0, 2);
@@ -554,22 +549,16 @@ function usePowerUp(ws, payload) {
         eliminatedCharacters: eliminated.map(char => char.name)
       };
       break;
-      
+
     case 'double_question':
+      room.turnActions.doubleQuestionActive = true;
       result = {
         type: 'double_question',
         message: 'You can ask two questions this turn!'
       };
       break;
-      
-    case 'truth_serum':
-      result = {
-        type: 'truth_serum',
-        message: 'Your next question will get a guaranteed accurate answer!'
-      };
-      break;
   }
-  
+
   // Broadcast power-up usage
   broadcastToRoom(playerInfo.roomCode, {
     type: 'powerup_used',
@@ -580,7 +569,7 @@ function usePowerUp(ws, payload) {
       result: result
     }
   });
-  
+
   // Send updated power-ups to the player
   ws.send(JSON.stringify({
     type: 'powerups_updated',
@@ -591,32 +580,78 @@ function usePowerUp(ws, payload) {
 function getCharacterCategories(characterSet) {
   const sampleChar = characterSets[characterSet][0];
   const categories = {};
-  
+
   Object.keys(sampleChar).forEach(key => {
     if (key !== 'name') {
       categories[key] = [...new Set(characterSets[characterSet].map(char => char[key]))];
     }
   });
-  
+
   return categories;
+}
+
+function handleEndTurn(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+  
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room || !room.gameStarted) return;
+  
+  const player = room.players.find(p => p.ws === ws);
+  
+  // Check if it's the player's turn
+  if (room.players[room.currentTurn] !== player) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'It\'s not your turn!' }
+    }));
+    return;
+  }
+  
+  endTurn(room);
+}
+
+function endTurn(room) {
+  // Reset turn actions
+  room.turnActions = {
+    questionAsked: false,
+    powerUpUsed: false,
+    guessMade: false,
+    doubleQuestionActive: false
+  };
+  
+  // Clear power-up cooldown for the player whose turn just ended
+  const currentPlayer = room.players[room.currentTurn];
+  currentPlayer.powerUpCooldown = false;
+  
+  // Move to next turn
+  room.currentTurn = (room.currentTurn + 1) % room.players.length;
+  
+  broadcastToRoom(room.code, {
+    type: 'turn_changed',
+    payload: { 
+      currentTurn: room.players[room.currentTurn].name,
+      turnActions: room.turnActions
+    }
+  });
 }
 
 function leaveRoom(ws, payload) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (!room) return;
-  
+
   const leavingPlayer = room.players.find(p => p.ws === ws);
   if (!leavingPlayer) return;
-  
+
   console.log(`Player ${leavingPlayer.name} left room ${playerInfo.roomCode}`);
-  
+
   // Remove player from room
   room.players = room.players.filter(p => p.ws !== ws);
   gameState.players.delete(ws);
-  
+
   // If room is empty, delete it
   if (room.players.length === 0) {
     gameState.rooms.delete(playerInfo.roomCode);
@@ -634,7 +669,7 @@ function leaveRoom(ws, payload) {
         canStart: room.players.length >= 2 && room.players.every(p => p.ready)
       }
     });
-    
+
     // If game was in progress, end it
     if (room.gameStarted) {
       broadcastToRoom(playerInfo.roomCode, {
@@ -644,7 +679,7 @@ function leaveRoom(ws, payload) {
       room.gameStarted = false;
     }
   }
-  
+
   // Confirm to the leaving player
   ws.send(JSON.stringify({
     type: 'left_room',
@@ -655,11 +690,11 @@ function leaveRoom(ws, payload) {
 function handleDisconnect(ws) {
   const playerInfo = gameState.players.get(ws);
   if (!playerInfo) return;
-  
+
   const room = gameState.rooms.get(playerInfo.roomCode);
   if (room) {
     room.players = room.players.filter(p => p.ws !== ws);
-    
+
     if (room.players.length === 0) {
       gameState.rooms.delete(playerInfo.roomCode);
     } else {
@@ -669,7 +704,7 @@ function handleDisconnect(ws) {
       });
     }
   }
-  
+
   gameState.players.delete(ws);
 }
 

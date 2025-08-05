@@ -15,6 +15,8 @@ class GuestQuestGame {
         };
         this.powerUps = {};
         this.availablePowerUps = {};
+        this.isMyTurn = false;
+        this.eliminatedCharacters = new Set();
         
         this.init();
     }
@@ -405,6 +407,7 @@ class GuestQuestGame {
             
             const powerUpEl = document.createElement('div');
             powerUpEl.className = `powerup-item ${uses <= 0 ? 'disabled' : ''}`;
+            powerUpEl.setAttribute('data-powerup-id', powerUpId);
             powerUpEl.onclick = () => this.usePowerUp(powerUpId);
             
             powerUpEl.innerHTML = `
@@ -416,6 +419,8 @@ class GuestQuestGame {
             
             powerUpsGrid.appendChild(powerUpEl);
         });
+        
+        this.updateTurnControls();
     }
     
     usePowerUp(powerUpId) {
@@ -450,6 +455,15 @@ class GuestQuestGame {
     handlePowerUpsUpdated(payload) {
         this.powerUps = payload.powerUps;
         this.setupPowerUps();
+    }
+    
+    endTurn() {
+        if (!this.isMyTurn) {
+            alert('It\'s not your turn!');
+            return;
+        }
+        
+        this.send('end_turn', {});
     }
     
     createCharacterButtons() {
@@ -492,16 +506,12 @@ class GuestQuestGame {
         this.gameStats.turnCount++;
         this.updateStats();
         
-        const isMyTurn = payload.currentTurn === this.playerName;
-        document.getElementById('question-input').disabled = !isMyTurn;
-        document.getElementById('ask-btn').disabled = !isMyTurn;
-        
-        const characterBtns = document.querySelectorAll('.character-btn');
-        characterBtns.forEach(btn => btn.disabled = !isMyTurn);
+        this.isMyTurn = payload.currentTurn === this.playerName;
+        this.updateTurnControls();
         
         // Visual feedback for turn change
         const turnEl = document.getElementById('current-turn');
-        if (isMyTurn) {
+        if (this.isMyTurn) {
             turnEl.style.background = '#d4edda';
             turnEl.style.color = '#155724';
             this.addLogMessage('🎯 It\'s your turn!');
@@ -509,6 +519,31 @@ class GuestQuestGame {
             turnEl.style.background = '#f8d7da';
             turnEl.style.color = '#721c24';
         }
+    }
+    
+    updateTurnControls() {
+        // Update all turn-based controls
+        document.getElementById('question-input').disabled = !this.isMyTurn;
+        document.getElementById('ask-btn').disabled = !this.isMyTurn;
+        document.getElementById('end-turn-btn').disabled = !this.isMyTurn;
+        
+        const characterBtns = document.querySelectorAll('.character-btn');
+        characterBtns.forEach(btn => btn.disabled = !this.isMyTurn);
+        
+        const powerUpBtns = document.querySelectorAll('.powerup-item');
+        powerUpBtns.forEach(btn => {
+            if (!this.isMyTurn) {
+                btn.classList.add('disabled');
+            } else {
+                // Check if power-up is available
+                const powerUpId = btn.getAttribute('data-powerup-id');
+                if (!this.powerUps[powerUpId] || this.powerUps[powerUpId] <= 0) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.classList.remove('disabled');
+                }
+            }
+        });
     }
     
     makeGuess(character) {
@@ -606,6 +641,10 @@ function changeUsername() {
 
 function leaveRoom() {
     game.leaveRoom();
+}
+
+function endTurn() {
+    game.endTurn();
 }
 
 function askQuestion() {
