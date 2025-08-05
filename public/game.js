@@ -21,6 +21,7 @@ class GuestQuestGame {
         this.eliminationRedoStack = [];
         this.turnTimer = null;
         this.timeRemaining = 0;
+        this.currentQuestionId = null;
         
         this.init();
     }
@@ -157,6 +158,21 @@ class GuestQuestGame {
                 break;
             case 'turn_timeout':
                 this.handleTurnTimeout(payload);
+                break;
+            case 'question_received':
+                this.handleQuestionReceived(payload);
+                break;
+            case 'question_sent':
+                this.handleQuestionSent(payload);
+                break;
+            case 'question_pending':
+                this.handleQuestionPending(payload);
+                break;
+            case 'question_answered':
+                this.handleQuestionAnswered(payload);
+                break;
+            case 'double_question_used':
+                this.handleDoubleQuestionUsed(payload);
                 break;
             case 'guess_made':
                 this.handleGuessMade(payload);
@@ -351,6 +367,9 @@ class GuestQuestGame {
         // Initialize turn controls
         this.updateTurnControls();
         
+        // Start initial timer
+        this.startTurnTimer(60);
+        
         this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
     }
     
@@ -362,11 +381,55 @@ class GuestQuestGame {
         if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
         if (character.hasGlasses !== undefined) details.push(`Glasses: ${character.hasGlasses ? 'yes' : 'no'}`);
         if (character.age) details.push(`Age: ${character.age}`);
-        if (character.power) details.push(`Power: ${character.power}`);
-        if (character.team) details.push(`Team: ${character.team}`);
-        if (character.hascape !== undefined) details.push(`Cape: ${character.hascape ? 'yes' : 'no'}`);
         
         detailsEl.textContent = details.join(' • ');
+        
+        // Store full character for attributes display
+        this.yourCharacterFull = character;
+        this.updateAttributesDisplay();
+    }
+    
+    updateAttributesDisplay() {
+        const attributesEl = document.getElementById('character-attributes');
+        if (!this.yourCharacterFull) return;
+        
+        const character = this.yourCharacterFull;
+        let attributesHtml = '<div class="attributes-grid">';
+        
+        // Add all attributes
+        Object.keys(character).forEach(key => {
+            if (key !== 'name' && key !== 'image') {
+                let value = character[key];
+                if (typeof value === 'boolean') {
+                    value = value ? 'Yes' : 'No';
+                }
+                
+                attributesHtml += `
+                    <div class="attribute-item">
+                        <span class="attribute-label">${this.formatAttributeName(key)}:</span>
+                        <span class="attribute-value">${value}</span>
+                    </div>
+                `;
+            }
+        });
+        
+        attributesHtml += '</div>';
+        attributesEl.innerHTML = attributesHtml;
+    }
+    
+    formatAttributeName(key) {
+        // Convert camelCase to readable format
+        return key.replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, str => str.toUpperCase())
+                  .replace('Has Glasses', 'Glasses')
+                  .replace('Hair Color', 'Hair');
+    }
+    
+    toggleAttributes() {
+        const attributesEl = document.getElementById('character-attributes');
+        const showAttributes = document.getElementById('show-attributes').checked;
+        
+        attributesEl.style.display = showAttributes ? 'block' : 'none';
     }
     
     setupQuestionHints() {
@@ -742,6 +805,75 @@ class GuestQuestGame {
         }
     }
     
+    handleQuestionReceived(payload) {
+        this.currentQuestionId = payload.questionId;
+        
+        // Show question modal
+        document.getElementById('asking-player-name').textContent = payload.askingPlayer;
+        document.getElementById('modal-question').textContent = payload.question;
+        document.getElementById('question-modal').style.display = 'flex';
+        
+        // Focus on custom answer input
+        document.getElementById('answer-input').focus();
+        
+        // Add enter key handler for custom answer
+        document.getElementById('answer-input').onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                this.answerCustom();
+            }
+        };
+    }
+    
+    handleQuestionSent(payload) {
+        this.addLogMessage(`❓ You asked ${payload.targetPlayer}: "${payload.question}" - Waiting for answer...`);
+    }
+    
+    handleQuestionPending(payload) {
+        if (payload.askingPlayer !== this.playerName && payload.targetPlayer !== this.playerName) {
+            this.addLogMessage(`❓ ${payload.askingPlayer} asked ${payload.targetPlayer}: "${payload.question}" - Waiting for answer...`);
+        }
+    }
+    
+    handleQuestionAnswered(payload) {
+        // Hide modal if it's open
+        document.getElementById('question-modal').style.display = 'none';
+        
+        // Add to log
+        this.addLogMessage(`❓ ${payload.askingPlayer} asked: "${payload.question}" - ${payload.targetPlayer} answered: "${payload.answer}"`);
+        
+        // Update stats
+        this.gameStats.questionsAsked++;
+        this.updateStats();
+    }
+    
+    answerQuestion(answer) {
+        if (!this.currentQuestionId) return;
+        
+        this.send('answer_question', {
+            answer: answer,
+            questionId: this.currentQuestionId
+        });
+        
+        // Hide modal
+        document.getElementById('question-modal').style.display = 'none';
+        this.currentQuestionId = null;
+    }
+    
+    answerCustom() {
+        const customAnswer = document.getElementById('answer-input').value.trim();
+        if (!customAnswer) {
+            alert('Please enter an answer');
+            return;
+        }
+        
+        this.answerQuestion(customAnswer);
+        document.getElementById('answer-input').value = '';
+    }
+    
+    handleDoubleQuestionUsed(payload) {
+        this.addLogMessage(`🎯 ${payload.player} used Double Question power-up - ${payload.message}`);
+    }
+    
     updateTurnControls() {
         // Update all turn-based controls
         document.getElementById('question-input').disabled = !this.isMyTurn;
@@ -905,6 +1037,18 @@ function redoElimination() {
 
 function resetBoard() {
     game.resetBoard();
+}
+
+function answerQuestion(answer) {
+    game.answerQuestion(answer);
+}
+
+function answerCustom() {
+    game.answerCustom();
+}
+
+function toggleAttributes() {
+    game.toggleAttributes();
 }
 
 function toggleHelp() {

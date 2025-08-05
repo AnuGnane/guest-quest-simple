@@ -89,6 +89,14 @@
                     Current turn: <span id="turn-player"></span>
                     <span id="turn-timer" class="turn-timer">60s</span>
                 </div>
+                <div class="attributes-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-attributes" onchange="toggleAttributes()">
+                        <span class="slider"></span>
+                        Show Character Attributes
+                    </label>
+                </div>
+                <div id="character-attributes" class="character-attributes" style="display: none;"></div>
             </div>
             
             <div class="powerups-section">
@@ -162,6 +170,29 @@
         <div id="game-over-screen" class="screen" style="display: none;">
             <h2 id="game-result"></h2>
             <button onclick="location.reload()">Play Again</button>
+        </div>
+        
+        <!-- Question Modal -->
+        <div id="question-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>❓ Question from <span id="asking-player-name"></span></h3>
+                </div>
+                <div class="modal-body">
+                    <div class="question-text" id="modal-question"></div>
+                    <div class="answer-section">
+                        <label for="answer-input">Your answer:</label>
+                        <div class="answer-buttons">
+                            <button id="answer-yes" onclick="answerQuestion('yes')">✅ Yes</button>
+                            <button id="answer-no" onclick="answerQuestion('no')">❌ No</button>
+                        </div>
+                        <div class="answer-custom">
+                            <input type="text" id="answer-input" placeholder="Or type a custom answer..." maxlength="50">
+                            <button id="answer-custom-btn" onclick="answerCustom()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     

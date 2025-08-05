@@ -138,6 +138,9 @@ function handleMessage(ws, data) {
     case 'use_powerup':
       usePowerUp(ws, payload);
       break;
+    case 'answer_question':
+      answerQuestion(ws, payload);
+      break;
     case 'end_turn':
       handleEndTurn(ws, payload);
       break;
@@ -352,72 +355,43 @@ function askQuestion(ws, payload) {
 
   // Find the target player (the one being asked about)
   const targetPlayer = room.players.find(p => p !== askingPlayer);
-  const targetCharacter = targetPlayer.character;
+  
+  // Store the question in room state for the target player to answer
+  room.pendingQuestion = {
+    question: question,
+    askingPlayer: askingPlayer.name,
+    targetPlayer: targetPlayer.name,
+    questionId: Math.random().toString(36).substring(2)
+  };
 
-  // Smart answer based on character attributes
-  let answer = 'no'; // default
-  const lowerQuestion = question.toLowerCase();
-
-  // Check for attribute-based questions
-  if (lowerQuestion.includes('male') || lowerQuestion.includes('man') || lowerQuestion.includes('boy')) {
-    answer = targetCharacter.gender === 'male' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('female') || lowerQuestion.includes('woman') || lowerQuestion.includes('girl')) {
-    answer = targetCharacter.gender === 'female' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('blonde') || lowerQuestion.includes('blond')) {
-    answer = targetCharacter.hairColor === 'blonde' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('brown hair') || lowerQuestion.includes('brunette')) {
-    answer = targetCharacter.hairColor === 'brown' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('black hair')) {
-    answer = targetCharacter.hairColor === 'black' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('red hair') || lowerQuestion.includes('ginger')) {
-    answer = targetCharacter.hairColor === 'red' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('grey hair') || lowerQuestion.includes('gray hair')) {
-    answer = targetCharacter.hairColor === 'grey' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('glasses') || lowerQuestion.includes('spectacles')) {
-    answer = targetCharacter.hasGlasses ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('young')) {
-    answer = targetCharacter.age === 'young' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('old')) {
-    answer = targetCharacter.age === 'old' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('middle') || lowerQuestion.includes('middle-aged')) {
-    answer = targetCharacter.age === 'middle' ? 'yes' : 'no';
-  }
-  // Superhero specific questions
-  else if (lowerQuestion.includes('fly') || lowerQuestion.includes('flight')) {
-    answer = targetCharacter.power === 'flight' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('strong') || lowerQuestion.includes('strength')) {
-    answer = targetCharacter.power === 'strength' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('justice league')) {
-    answer = targetCharacter.team === 'Justice League' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('avengers')) {
-    answer = targetCharacter.team === 'Avengers' ? 'yes' : 'no';
-  } else if (lowerQuestion.includes('cape')) {
-    answer = targetCharacter.hascape ? 'yes' : 'no';
-  }
-  // If no specific attribute matched, give random answer
-  else {
-    answer = Math.random() > 0.5 ? 'yes' : 'no';
-  }
-
-  // Broadcast question and answer
-  broadcastToRoom(playerInfo.roomCode, {
-    type: 'question_asked',
+  // Send question popup to target player
+  targetPlayer.ws.send(JSON.stringify({
+    type: 'question_received',
     payload: {
-      player: askingPlayer.name,
-      question,
-      answer,
-      wasIntelligent: answer !== (Math.random() > 0.5 ? 'yes' : 'no') // indicate if it was a smart answer
+      question: question,
+      askingPlayer: askingPlayer.name,
+      questionId: room.pendingQuestion.questionId
+    }
+  }));
+
+  // Notify asking player that question was sent
+  askingPlayer.ws.send(JSON.stringify({
+    type: 'question_sent',
+    payload: {
+      question: question,
+      targetPlayer: targetPlayer.name
+    }
+  }));
+
+  // Broadcast to all players that a question is pending
+  broadcastToRoom(playerInfo.roomCode, {
+    type: 'question_pending',
+    payload: {
+      askingPlayer: askingPlayer.name,
+      targetPlayer: targetPlayer.name,
+      question: question
     }
   });
-
-  // Questions always end the turn (unless double question is active)
-  if (room.turnActions.doubleQuestionActive) {
-    room.turnActions.doubleQuestionActive = false; // Used up double question
-    room.turnActions.questionAsked = true; // Mark first question as asked
-  } else {
-    // End turn after question
-    endTurn(room);
-  }
 }
 
 function makeGuess(ws, payload) {
@@ -613,6 +587,68 @@ function getCharacterCategories(characterSet) {
   });
 
   return categories;
+}
+
+function answerQuestion(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+  
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room || !room.pendingQuestion) return;
+  
+  const { answer, questionId } = payload;
+  const player = room.players.find(p => p.ws === ws);
+  
+  // Verify this player is the target of the question
+  if (!room.pendingQuestion || room.pendingQuestion.targetPlayer !== player.name) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'No question pending for you!' }
+    }));
+    return;
+  }
+  
+  // Verify question ID matches
+  if (room.pendingQuestion.questionId !== questionId) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Invalid question ID!' }
+    }));
+    return;
+  }
+  
+  // Broadcast the question and answer to all players
+  broadcastToRoom(playerInfo.roomCode, {
+    type: 'question_answered',
+    payload: {
+      askingPlayer: room.pendingQuestion.askingPlayer,
+      targetPlayer: room.pendingQuestion.targetPlayer,
+      question: room.pendingQuestion.question,
+      answer: answer
+    }
+  });
+  
+  // Clear pending question
+  room.pendingQuestion = null;
+  
+  // Handle turn logic
+  if (room.turnActions.doubleQuestionActive) {
+    // First question of double question - don't end turn yet
+    room.turnActions.questionAsked = true; // Mark first question as asked
+    room.turnActions.doubleQuestionActive = false; // Used up the power-up
+    
+    // Notify that they can ask one more question
+    broadcastToRoom(playerInfo.roomCode, {
+      type: 'double_question_used',
+      payload: {
+        player: room.pendingQuestion.askingPlayer,
+        message: 'You can ask one more question this turn!'
+      }
+    });
+  } else {
+    // Normal question or second question of double - end turn
+    endTurn(room);
+  }
 }
 
 function handleEndTurn(ws, payload) {
