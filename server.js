@@ -19,37 +19,141 @@ app.get('/api/character-sets', (req, res) => {
   res.json(sets);
 });
 
+// Power-ups available in the game
+const powerUps = {
+  reveal_attribute: {
+    name: 'Reveal Attribute',
+    description: 'Reveals a random attribute of the target character',
+    icon: '🔍',
+    uses: 1
+  },
+  category_scan: {
+    name: 'Category Scan',
+    description: 'Ask about an entire category (e.g., all occupations)',
+    icon: '📊',
+    uses: 1
+  },
+  double_question: {
+    name: 'Double Question',
+    description: 'Ask two questions in one turn',
+    icon: '❓❓',
+    uses: 1
+  },
+  truth_serum: {
+    name: 'Truth Serum',
+    description: 'Next question gets a guaranteed accurate answer',
+    icon: '💉',
+    uses: 1
+  },
+  elimination_hint: {
+    name: 'Elimination Hint',
+    description: 'Eliminates 2 random characters that are NOT the target',
+    icon: '❌',
+    uses: 1
+  }
+};
+
 // Game state
 const gameState = {
   rooms: new Map(),
   players: new Map()
 };
 
-// Character sets with attributes for better gameplay
+// Enhanced character sets with rich categories and attributes
 const characterSets = {
   classic: [
-    { name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young' },
-    { name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle' },
-    { name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old' },
-    { name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young' },
-    { name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle' },
-    { name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old' },
-    { name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young' },
-    { name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle' },
-    { name: 'Ivy', gender: 'female', hairColor: 'black', hasGlasses: true, age: 'old' },
-    { name: 'Jack', gender: 'male', hairColor: 'red', hasGlasses: false, age: 'young' },
-    { name: 'Kate', gender: 'female', hairColor: 'blonde', hasGlasses: true, age: 'middle' },
-    { name: 'Leo', gender: 'male', hairColor: 'brown', hasGlasses: false, age: 'old' }
+    { 
+      name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young',
+      occupation: 'teacher', hobby: 'reading', personality: 'cheerful', location: 'city'
+    },
+    { 
+      name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle',
+      occupation: 'engineer', hobby: 'gaming', personality: 'analytical', location: 'suburbs'
+    },
+    { 
+      name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old',
+      occupation: 'retired', hobby: 'gardening', personality: 'wise', location: 'countryside'
+    },
+    { 
+      name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young',
+      occupation: 'artist', hobby: 'painting', personality: 'creative', location: 'city'
+    },
+    { 
+      name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle',
+      occupation: 'doctor', hobby: 'hiking', personality: 'caring', location: 'city'
+    },
+    { 
+      name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old',
+      occupation: 'professor', hobby: 'chess', personality: 'intellectual', location: 'city'
+    },
+    { 
+      name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young',
+      occupation: 'chef', hobby: 'cooking', personality: 'energetic', location: 'city'
+    },
+    { 
+      name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle',
+      occupation: 'pilot', hobby: 'flying', personality: 'adventurous', location: 'suburbs'
+    }
   ],
   superheroes: [
-    { name: 'Superman', gender: 'male', power: 'flight', team: 'Justice League', hascape: true },
-    { name: 'Wonder Woman', gender: 'female', power: 'strength', team: 'Justice League', hascape: false },
-    { name: 'Batman', gender: 'male', power: 'gadgets', team: 'Justice League', hascape: true },
-    { name: 'Spider-Man', gender: 'male', power: 'webs', team: 'Avengers', hascape: false },
-    { name: 'Iron Man', gender: 'male', power: 'technology', team: 'Avengers', hascape: false },
-    { name: 'Captain Marvel', gender: 'female', power: 'energy', team: 'Avengers', hascape: true },
-    { name: 'Flash', gender: 'male', power: 'speed', team: 'Justice League', hascape: false },
-    { name: 'Black Widow', gender: 'female', power: 'stealth', team: 'Avengers', hascape: false }
+    { 
+      name: 'Superman', gender: 'male', power: 'flight', team: 'Justice League', hascape: true,
+      weakness: 'kryptonite', origin: 'alien', morality: 'hero', element: 'none'
+    },
+    { 
+      name: 'Wonder Woman', gender: 'female', power: 'strength', team: 'Justice League', hascape: false,
+      weakness: 'binding', origin: 'mythological', morality: 'hero', element: 'none'
+    },
+    { 
+      name: 'Batman', gender: 'male', power: 'gadgets', team: 'Justice League', hascape: true,
+      weakness: 'human', origin: 'human', morality: 'hero', element: 'none'
+    },
+    { 
+      name: 'Spider-Man', gender: 'male', power: 'webs', team: 'Avengers', hascape: false,
+      weakness: 'responsibility', origin: 'mutated', morality: 'hero', element: 'none'
+    },
+    { 
+      name: 'Iron Man', gender: 'male', power: 'technology', team: 'Avengers', hascape: false,
+      weakness: 'arc reactor', origin: 'human', morality: 'hero', element: 'metal'
+    },
+    { 
+      name: 'Doctor Strange', gender: 'male', power: 'magic', team: 'Avengers', hascape: true,
+      weakness: 'arrogance', origin: 'human', morality: 'hero', element: 'mystic'
+    },
+    { 
+      name: 'Storm', gender: 'female', power: 'weather', team: 'X-Men', hascape: false,
+      weakness: 'claustrophobia', origin: 'mutant', morality: 'hero', element: 'air'
+    },
+    { 
+      name: 'Aquaman', gender: 'male', power: 'water', team: 'Justice League', hascape: false,
+      weakness: 'dehydration', origin: 'atlantean', morality: 'hero', element: 'water'
+    }
+  ],
+  fantasy: [
+    { 
+      name: 'Gandalf', gender: 'male', race: 'wizard', weapon: 'staff', age: 'ancient',
+      magic: 'light', homeland: 'valinor', quest: 'ring bearer', alignment: 'good'
+    },
+    { 
+      name: 'Legolas', gender: 'male', race: 'elf', weapon: 'bow', age: 'immortal',
+      magic: 'nature', homeland: 'mirkwood', quest: 'fellowship', alignment: 'good'
+    },
+    { 
+      name: 'Gimli', gender: 'male', race: 'dwarf', weapon: 'axe', age: 'mature',
+      magic: 'none', homeland: 'erebor', quest: 'fellowship', alignment: 'good'
+    },
+    { 
+      name: 'Arwen', gender: 'female', race: 'elf', weapon: 'sword', age: 'immortal',
+      magic: 'healing', homeland: 'rivendell', quest: 'love', alignment: 'good'
+    },
+    { 
+      name: 'Sauron', gender: 'male', race: 'maia', weapon: 'ring', age: 'ancient',
+      magic: 'dark', homeland: 'mordor', quest: 'domination', alignment: 'evil'
+    },
+    { 
+      name: 'Galadriel', gender: 'female', race: 'elf', weapon: 'ring', age: 'ancient',
+      magic: 'light', homeland: 'lothlorien', quest: 'protection', alignment: 'good'
+    }
   ]
 };
 
@@ -94,6 +198,9 @@ function handleMessage(ws, data) {
       break;
     case 'make_guess':
       makeGuess(ws, payload);
+      break;
+    case 'use_powerup':
+      usePowerUp(ws, payload);
       break;
     case 'leave_room':
       leaveRoom(ws, payload);
@@ -233,6 +340,14 @@ function startGame(ws, payload) {
   const shuffledCharacters = [...room.characters].sort(() => Math.random() - 0.5);
   room.players.forEach((player, index) => {
     player.character = shuffledCharacters[index];
+    // Give each player power-ups
+    player.powerUps = {
+      reveal_attribute: 1,
+      category_scan: 1,
+      double_question: 1,
+      truth_serum: 1,
+      elimination_hint: 1
+    };
   });
   
   room.gameStarted = true;
@@ -247,7 +362,9 @@ function startGame(ws, payload) {
         currentTurn: room.players[room.currentTurn].name,
         players: room.players.map(p => p.name),
         allCharacters: room.characters.map(char => char.name),
-        characterSet: room.characterSet
+        characterSet: room.characterSet,
+        powerUps: player.powerUps,
+        availablePowerUps: powerUps
       }
     }));
   });
@@ -383,6 +500,105 @@ function broadcastToRoom(roomCode, message) {
       player.ws.send(JSON.stringify(message));
     }
   });
+}
+
+function usePowerUp(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+  
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room || !room.gameStarted) return;
+  
+  const { powerUpType } = payload;
+  const player = room.players.find(p => p.ws === ws);
+  
+  if (!player || !player.powerUps[powerUpType] || player.powerUps[powerUpType] <= 0) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Power-up not available or already used' }
+    }));
+    return;
+  }
+  
+  // Use the power-up
+  player.powerUps[powerUpType]--;
+  
+  const targetPlayer = room.players.find(p => p !== player);
+  let result = {};
+  
+  switch (powerUpType) {
+    case 'reveal_attribute':
+      const attributes = Object.keys(targetPlayer.character).filter(key => key !== 'name');
+      const randomAttr = attributes[Math.floor(Math.random() * attributes.length)];
+      result = {
+        type: 'reveal_attribute',
+        attribute: randomAttr,
+        value: targetPlayer.character[randomAttr]
+      };
+      break;
+      
+    case 'category_scan':
+      // For now, reveal all possible values in a category
+      const categories = getCharacterCategories(room.characterSet);
+      result = {
+        type: 'category_scan',
+        categories: categories
+      };
+      break;
+      
+    case 'elimination_hint':
+      const allChars = room.characters.filter(char => char.name !== targetPlayer.character.name);
+      const eliminated = allChars.sort(() => Math.random() - 0.5).slice(0, 2);
+      result = {
+        type: 'elimination_hint',
+        eliminatedCharacters: eliminated.map(char => char.name)
+      };
+      break;
+      
+    case 'double_question':
+      result = {
+        type: 'double_question',
+        message: 'You can ask two questions this turn!'
+      };
+      break;
+      
+    case 'truth_serum':
+      result = {
+        type: 'truth_serum',
+        message: 'Your next question will get a guaranteed accurate answer!'
+      };
+      break;
+  }
+  
+  // Broadcast power-up usage
+  broadcastToRoom(playerInfo.roomCode, {
+    type: 'powerup_used',
+    payload: {
+      player: player.name,
+      powerUpType: powerUpType,
+      powerUpName: powerUps[powerUpType].name,
+      result: result
+    }
+  });
+  
+  // Send updated power-ups to the player
+  ws.send(JSON.stringify({
+    type: 'powerups_updated',
+    payload: { powerUps: player.powerUps }
+  }));
+}
+
+function getCharacterCategories(characterSet) {
+  const sampleChar = characterSets[characterSet][0];
+  const categories = {};
+  
+  Object.keys(sampleChar).forEach(key => {
+    if (key !== 'name') {
+      categories[key] = [...new Set(characterSets[characterSet].map(char => char[key]))];
+    }
+  });
+  
+  return categories;
 }
 
 function leaveRoom(ws, payload) {

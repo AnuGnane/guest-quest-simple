@@ -343,6 +343,74 @@ button.ready:hover {
     color: #333;
 }
 
+.powerups-section {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.powerups-section h4 {
+    margin-bottom: 0.75rem;
+    color: #856404;
+}
+
+.powerups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.powerup-item {
+    background: white;
+    border: 2px solid #ffeaa7;
+    border-radius: 5px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.powerup-item:hover:not(.disabled) {
+    background: #fff3cd;
+    border-color: #ffcd39;
+    transform: translateY(-2px);
+}
+
+.powerup-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.powerup-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.powerup-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #856404;
+    margin-bottom: 0.25rem;
+}
+
+.powerup-description {
+    font-size: 0.8rem;
+    color: #6c757d;
+    line-height: 1.2;
+}
+
+.powerup-uses {
+    font-size: 0.8rem;
+    color: #28a745;
+    font-weight: bold;
+    margin-top: 0.25rem;
+}
+
 .game-actions {
     margin-bottom: 1.5rem;
 }

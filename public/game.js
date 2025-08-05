@@ -13,6 +13,8 @@ class GuestQuestGame {
             guessesMade: 0,
             turnCount: 1
         };
+        this.powerUps = {};
+        this.availablePowerUps = {};
         
         this.init();
     }
@@ -151,6 +153,12 @@ class GuestQuestGame {
                 break;
             case 'left_room':
                 this.handleLeftRoom(payload);
+                break;
+            case 'powerup_used':
+                this.handlePowerUpUsed(payload);
+                break;
+            case 'powerups_updated':
+                this.handlePowerUpsUpdated(payload);
                 break;
             case 'game_ended':
                 this.handleGameEnded(payload);
@@ -301,6 +309,8 @@ class GuestQuestGame {
         this.characters = payload.allCharacters;
         this.characterSet = payload.characterSet;
         this.yourCharacter = payload.yourCharacter;
+        this.powerUps = payload.powerUps;
+        this.availablePowerUps = payload.availablePowerUps;
         
         // Hide lobby, show game
         document.getElementById('lobby-screen').style.display = 'none';
@@ -320,6 +330,9 @@ class GuestQuestGame {
         
         // Setup question hints
         this.setupQuestionHints();
+        
+        // Setup power-ups
+        this.setupPowerUps();
         
         this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
     }
@@ -380,6 +393,63 @@ class GuestQuestGame {
         }
         
         hintContent.innerHTML = hints;
+    }
+    
+    setupPowerUps() {
+        const powerUpsGrid = document.getElementById('powerups-grid');
+        powerUpsGrid.innerHTML = '';
+        
+        Object.keys(this.availablePowerUps).forEach(powerUpId => {
+            const powerUp = this.availablePowerUps[powerUpId];
+            const uses = this.powerUps[powerUpId] || 0;
+            
+            const powerUpEl = document.createElement('div');
+            powerUpEl.className = `powerup-item ${uses <= 0 ? 'disabled' : ''}`;
+            powerUpEl.onclick = () => this.usePowerUp(powerUpId);
+            
+            powerUpEl.innerHTML = `
+                <div class="powerup-icon">${powerUp.icon}</div>
+                <div class="powerup-name">${powerUp.name}</div>
+                <div class="powerup-description">${powerUp.description}</div>
+                <div class="powerup-uses">Uses: ${uses}</div>
+            `;
+            
+            powerUpsGrid.appendChild(powerUpEl);
+        });
+    }
+    
+    usePowerUp(powerUpId) {
+        if (!this.powerUps[powerUpId] || this.powerUps[powerUpId] <= 0) {
+            alert('This power-up is not available or has been used up!');
+            return;
+        }
+        
+        if (confirm(`Use ${this.availablePowerUps[powerUpId].name}?`)) {
+            this.send('use_powerup', { powerUpType: powerUpId });
+        }
+    }
+    
+    handlePowerUpUsed(payload) {
+        const { player, powerUpName, result } = payload;
+        
+        let message = `🎯 ${player} used ${powerUpName}!`;
+        
+        if (result.type === 'reveal_attribute') {
+            message += ` Revealed: ${result.attribute} = ${result.value}`;
+        } else if (result.type === 'elimination_hint') {
+            message += ` Eliminated: ${result.eliminatedCharacters.join(', ')}`;
+        } else if (result.type === 'category_scan') {
+            message += ` Categories revealed!`;
+        } else {
+            message += ` ${result.message || ''}`;
+        }
+        
+        this.addLogMessage(message);
+    }
+    
+    handlePowerUpsUpdated(payload) {
+        this.powerUps = payload.powerUps;
+        this.setupPowerUps();
     }
     
     createCharacterButtons() {
