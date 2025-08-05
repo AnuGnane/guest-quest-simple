@@ -1,0 +1,17 @@
+{
+  "name": "guest-quest-simple",
+  "version": "1.0.0",
+  "description": "A simplified multiplayer Guess Who game",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": ["game", "multiplayer", "guess-who"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}
