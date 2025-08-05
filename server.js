@@ -95,6 +95,9 @@ function handleMessage(ws, data) {
     case 'make_guess':
       makeGuess(ws, payload);
       break;
+    case 'leave_room':
+      leaveRoom(ws, payload);
+      break;
     default:
       console.log('Unknown message type:', type);
   }
@@ -136,6 +139,35 @@ function joinRoom(ws, payload) {
     return;
   }
   
+  // Check if player is already in this room
+  const existingPlayer = room.players.find(p => p.name === playerName);
+  if (existingPlayer) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'A player with this name is already in the room' }
+    }));
+    return;
+  }
+  
+  // Check if this WebSocket is already in a room
+  const existingPlayerInfo = gameState.players.get(ws);
+  if (existingPlayerInfo) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You are already in a room. Leave your current room first.' }
+    }));
+    return;
+  }
+  
+  // Check if game has already started
+  if (room.gameStarted) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Cannot join - game has already started' }
+    }));
+    return;
+  }
+  
   const player = {
     id: Math.random().toString(36).substring(2),
     name: playerName,
@@ -146,6 +178,8 @@ function joinRoom(ws, payload) {
   
   room.players.push(player);
   gameState.players.set(ws, { playerId: player.id, roomCode });
+  
+  console.log(`Player ${playerName} joined room ${roomCode}`);
   
   // Broadcast updated room state
   broadcastToRoom(roomCode, {
@@ -349,6 +383,57 @@ function broadcastToRoom(roomCode, message) {
       player.ws.send(JSON.stringify(message));
     }
   });
+}
+
+function leaveRoom(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+  
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room) return;
+  
+  const leavingPlayer = room.players.find(p => p.ws === ws);
+  if (!leavingPlayer) return;
+  
+  console.log(`Player ${leavingPlayer.name} left room ${playerInfo.roomCode}`);
+  
+  // Remove player from room
+  room.players = room.players.filter(p => p.ws !== ws);
+  gameState.players.delete(ws);
+  
+  // If room is empty, delete it
+  if (room.players.length === 0) {
+    gameState.rooms.delete(playerInfo.roomCode);
+    console.log(`Room ${playerInfo.roomCode} deleted (empty)`);
+  } else {
+    // Broadcast updated room state to remaining players
+    broadcastToRoom(playerInfo.roomCode, {
+      type: 'room_updated',
+      payload: {
+        players: room.players.map(p => ({
+          id: p.id,
+          name: p.name,
+          ready: p.ready
+        })),
+        canStart: room.players.length >= 2 && room.players.every(p => p.ready)
+      }
+    });
+    
+    // If game was in progress, end it
+    if (room.gameStarted) {
+      broadcastToRoom(playerInfo.roomCode, {
+        type: 'game_ended',
+        payload: { reason: `${leavingPlayer.name} left the game` }
+      });
+      room.gameStarted = false;
+    }
+  }
+  
+  // Confirm to the leaving player
+  ws.send(JSON.stringify({
+    type: 'left_room',
+    payload: { success: true }
+  }));
 }
 
 function handleDisconnect(ws) {

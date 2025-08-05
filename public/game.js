@@ -5,6 +5,7 @@ class GuestQuestGame {
         this.roomCode = '';
         this.isReady = false;
         this.gameStarted = false;
+        this.inRoom = false;
         this.characters = [];
         this.characterSets = {};
         this.gameStats = {
@@ -68,7 +69,7 @@ class GuestQuestGame {
     setupEventListeners() {
         // Enter key handlers
         document.getElementById('player-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.createRoom();
+            if (e.key === 'Enter') this.setUsername();
         });
         
         document.getElementById('room-code').addEventListener('keypress', (e) => {
@@ -78,6 +79,49 @@ class GuestQuestGame {
         document.getElementById('question-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.askQuestion();
         });
+        
+        // Username validation
+        document.getElementById('player-name').addEventListener('input', (e) => {
+            this.validateUsername(e.target.value);
+        });
+    }
+    
+    validateUsername(username) {
+        const btn = document.getElementById('set-username-btn');
+        const isValid = /^[a-zA-Z0-9]{3,20}$/.test(username);
+        
+        btn.disabled = !isValid;
+        
+        if (username.length > 0 && !isValid) {
+            btn.textContent = username.length < 3 ? 'Too Short' : 'Invalid Characters';
+        } else {
+            btn.textContent = 'Continue';
+        }
+    }
+    
+    setUsername() {
+        const nameInput = document.getElementById('player-name');
+        const username = nameInput.value.trim();
+        
+        if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+            alert('Username must be 3-20 characters, letters and numbers only');
+            return;
+        }
+        
+        this.playerName = username;
+        document.getElementById('display-username').textContent = username;
+        
+        // Hide username screen, show room selection
+        document.getElementById('username-screen').style.display = 'none';
+        document.getElementById('room-selection-screen').style.display = 'block';
+    }
+    
+    changeUsername() {
+        // Reset to username screen
+        document.getElementById('room-selection-screen').style.display = 'none';
+        document.getElementById('username-screen').style.display = 'block';
+        document.getElementById('player-name').value = this.playerName;
+        document.getElementById('player-name').focus();
     }
     
     handleMessage(data) {
@@ -105,8 +149,14 @@ class GuestQuestGame {
             case 'game_over':
                 this.handleGameOver(payload);
                 break;
+            case 'left_room':
+                this.handleLeftRoom(payload);
+                break;
+            case 'game_ended':
+                this.handleGameEnded(payload);
+                break;
             case 'error':
-                alert(payload.message);
+                this.handleError(payload);
                 break;
             default:
                 console.log('Unknown message type:', type);
@@ -114,51 +164,94 @@ class GuestQuestGame {
     }
     
     createRoom() {
-        const nameInput = document.getElementById('player-name');
-        const characterSetSelect = document.getElementById('character-set-select');
-        
-        this.playerName = nameInput.value.trim();
-        const selectedCharacterSet = characterSetSelect.value;
-        
-        if (!this.playerName) {
-            alert('Please enter your name');
+        if (this.inRoom) {
+            alert('You are already in a room. Leave the current room first.');
             return;
         }
+        
+        const characterSetSelect = document.getElementById('character-set-select');
+        const selectedCharacterSet = characterSetSelect.value;
         
         this.send('create_room', { 
             playerName: this.playerName,
             characterSet: selectedCharacterSet
         });
+        
+        // Disable room selection buttons while creating
+        this.setRoomSelectionEnabled(false);
     }
     
     handleRoomCreated(payload) {
         this.roomCode = payload.roomCode;
         document.getElementById('current-room-code').textContent = this.roomCode;
-        document.getElementById('room-info').style.display = 'block';
         
         // Auto-join the created room
         this.send('join_room', { roomCode: this.roomCode, playerName: this.playerName });
     }
     
     joinRoom() {
-        const nameInput = document.getElementById('player-name');
-        const codeInput = document.getElementById('room-code');
-        
-        this.playerName = nameInput.value.trim();
-        this.roomCode = codeInput.value.trim().toUpperCase();
-        
-        if (!this.playerName || !this.roomCode) {
-            alert('Please enter your name and room code');
+        if (this.inRoom) {
+            alert('You are already in a room. Leave the current room first.');
             return;
         }
         
-        document.getElementById('current-room-code').textContent = this.roomCode;
-        document.getElementById('room-info').style.display = 'block';
+        const codeInput = document.getElementById('room-code');
+        this.roomCode = codeInput.value.trim().toUpperCase();
+        
+        if (!this.roomCode) {
+            alert('Please enter a room code');
+            return;
+        }
         
         this.send('join_room', { roomCode: this.roomCode, playerName: this.playerName });
+        
+        // Disable room selection buttons while joining
+        this.setRoomSelectionEnabled(false);
+    }
+    
+    setRoomSelectionEnabled(enabled) {
+        document.getElementById('create-room-btn').disabled = !enabled;
+        document.getElementById('join-room-btn').disabled = !enabled;
+        document.getElementById('room-code').disabled = !enabled;
+        document.getElementById('character-set-select').disabled = !enabled;
+    }
+    
+    leaveRoom() {
+        if (this.gameStarted) {
+            if (!confirm('Are you sure you want to leave the game in progress?')) {
+                return;
+            }
+        }
+        
+        this.send('leave_room', {});
+        
+        // Reset state
+        this.inRoom = false;
+        this.isReady = false;
+        this.gameStarted = false;
+        this.roomCode = '';
+        
+        // Show room selection screen
+        document.getElementById('lobby-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('room-selection-screen').style.display = 'block';
+        
+        // Re-enable room selection
+        this.setRoomSelectionEnabled(true);
+        
+        // Clear room code input
+        document.getElementById('room-code').value = '';
     }
     
     handleRoomUpdated(payload) {
+        // First time joining room
+        if (!this.inRoom) {
+            this.inRoom = true;
+            // Hide room selection, show lobby
+            document.getElementById('room-selection-screen').style.display = 'none';
+            document.getElementById('lobby-screen').style.display = 'block';
+        }
+        
         const playersListEl = document.getElementById('players-list');
         playersListEl.innerHTML = '';
         
@@ -166,13 +259,13 @@ class GuestQuestGame {
             const playerEl = document.createElement('div');
             playerEl.className = `player-item ${player.ready ? 'player-ready' : ''}`;
             playerEl.innerHTML = `
-                <span>${player.name}</span>
+                <span>${player.name}${player.name === this.playerName ? ' (You)' : ''}</span>
                 <span>${player.ready ? '✓ Ready' : 'Not Ready'}</span>
             `;
             playersListEl.appendChild(playerEl);
         });
         
-        // Show ready button if not ready
+        // Show ready button
         const readyBtn = document.getElementById('ready-btn');
         readyBtn.style.display = 'block';
         readyBtn.textContent = this.isReady ? 'Not Ready' : 'Ready';
@@ -368,6 +461,22 @@ class GuestQuestGame {
         document.getElementById('turn-count').textContent = this.gameStats.turnCount;
     }
     
+    handleLeftRoom(payload) {
+        // Room left successfully - already handled in leaveRoom()
+    }
+    
+    handleGameEnded(payload) {
+        alert(`Game ended: ${payload.reason}`);
+        this.leaveRoom();
+    }
+    
+    handleError(payload) {
+        alert(payload.message);
+        
+        // Re-enable room selection if there was an error joining/creating
+        this.setRoomSelectionEnabled(true);
+    }
+    
     handleGameOver(payload) {
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('game-over-screen').style.display = 'block';
@@ -415,6 +524,18 @@ function toggleReady() {
 
 function startGame() {
     game.startGame();
+}
+
+function setUsername() {
+    game.setUsername();
+}
+
+function changeUsername() {
+    game.changeUsername();
+}
+
+function leaveRoom() {
+    game.leaveRoom();
 }
 
 function askQuestion() {
