@@ -52,35 +52,43 @@ const characterSets = {
   classic: [
     {
       name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young',
-      occupation: 'teacher', hobby: 'reading', personality: 'cheerful', location: 'city'
+      occupation: 'teacher', hobby: 'reading', personality: 'cheerful', location: 'city',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle',
-      occupation: 'engineer', hobby: 'gaming', personality: 'analytical', location: 'suburbs'
+      occupation: 'engineer', hobby: 'gaming', personality: 'analytical', location: 'suburbs',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old',
-      occupation: 'retired', hobby: 'gardening', personality: 'wise', location: 'countryside'
+      occupation: 'retired', hobby: 'gardening', personality: 'wise', location: 'countryside',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young',
-      occupation: 'artist', hobby: 'painting', personality: 'creative', location: 'city'
+      occupation: 'artist', hobby: 'painting', personality: 'creative', location: 'city',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle',
-      occupation: 'doctor', hobby: 'hiking', personality: 'caring', location: 'city'
+      occupation: 'doctor', hobby: 'hiking', personality: 'caring', location: 'city',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old',
-      occupation: 'professor', hobby: 'chess', personality: 'intellectual', location: 'city'
+      occupation: 'professor', hobby: 'chess', personality: 'intellectual', location: 'city',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young',
-      occupation: 'chef', hobby: 'cooking', personality: 'energetic', location: 'city'
+      occupation: 'chef', hobby: 'cooking', personality: 'energetic', location: 'city',
+      image: '/images/characters/user.png'
     },
     {
       name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle',
-      occupation: 'pilot', hobby: 'flying', personality: 'adventurous', location: 'suburbs'
+      occupation: 'pilot', hobby: 'flying', personality: 'adventurous', location: 'suburbs',
+      image: '/images/characters/user.png'
     }
   ]
 };
@@ -287,6 +295,14 @@ function startGame(ws, payload) {
 
   room.gameStarted = true;
   room.currentTurn = 0;
+  
+  // Initialize turn actions
+  room.turnActions = {
+    questionAsked: false,
+    powerUpUsed: false,
+    guessMade: false,
+    doubleQuestionActive: false
+  };
 
   // Send game start to all players
   room.players.forEach(player => {
@@ -296,7 +312,7 @@ function startGame(ws, payload) {
         yourCharacter: player.character,
         currentTurn: room.players[room.currentTurn].name,
         players: room.players.map(p => p.name),
-        allCharacters: room.characters.map(char => char.name),
+        allCharacters: room.characters,
         characterSet: room.characterSet,
         powerUps: player.powerUps,
         availablePowerUps: powerUps

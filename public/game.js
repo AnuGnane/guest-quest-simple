@@ -326,15 +326,22 @@ class GuestQuestGame {
         
         // Set current turn
         document.getElementById('turn-player').textContent = payload.currentTurn;
+        this.isMyTurn = payload.currentTurn === this.playerName;
         
         // Create character buttons
         this.createCharacterButtons();
+        
+        // Create elimination board
+        this.createEliminationBoard();
         
         // Setup question hints
         this.setupQuestionHints();
         
         // Setup power-ups
         this.setupPowerUps();
+        
+        // Initialize turn controls
+        this.updateTurnControls();
         
         this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
     }
@@ -466,15 +473,62 @@ class GuestQuestGame {
         this.send('end_turn', {});
     }
     
+    createEliminationBoard() {
+        const eliminationBoard = document.getElementById('elimination-board');
+        eliminationBoard.innerHTML = '';
+        
+        this.characters.forEach(character => {
+            const charEl = document.createElement('div');
+            charEl.className = 'elimination-character';
+            charEl.setAttribute('data-character', character.name);
+            charEl.onclick = () => this.toggleElimination(character.name);
+            
+            charEl.innerHTML = `
+                <img src="${character.image}" alt="${character.name}" class="elimination-image" 
+                     onerror="this.src='/images/characters/user.png'">
+                <div class="elimination-name">${character.name}</div>
+                <div class="elimination-overlay">❌</div>
+            `;
+            
+            eliminationBoard.appendChild(charEl);
+        });
+    }
+    
+    toggleElimination(characterName) {
+        const charEl = document.querySelector(`[data-character="${characterName}"]`);
+        if (!charEl) return;
+        
+        if (this.eliminatedCharacters.has(characterName)) {
+            this.eliminatedCharacters.delete(characterName);
+            charEl.classList.remove('eliminated');
+        } else {
+            this.eliminatedCharacters.add(characterName);
+            charEl.classList.add('eliminated');
+        }
+    }
+    
+    clearEliminated() {
+        this.eliminatedCharacters.clear();
+        document.querySelectorAll('.elimination-character').forEach(el => {
+            el.classList.remove('eliminated');
+        });
+    }
+    
     createCharacterButtons() {
         const charactersEl = document.getElementById('characters-list');
         charactersEl.innerHTML = '';
         
         this.characters.forEach(character => {
-            const btn = document.createElement('button');
+            const btn = document.createElement('div');
             btn.className = 'character-btn';
-            btn.textContent = character;
-            btn.onclick = () => this.makeGuess(character);
+            btn.onclick = () => this.makeGuess(character.name);
+            
+            btn.innerHTML = `
+                <img src="${character.image}" alt="${character.name}" class="character-image" 
+                     onerror="this.src='/images/characters/user.png'">
+                <div class="character-name">${character.name}</div>
+            `;
+            
             charactersEl.appendChild(btn);
         });
     }
@@ -649,6 +703,29 @@ function endTurn() {
 
 function askQuestion() {
     game.askQuestion();
+}
+
+function showTab(tabName) {
+    // Hide all tab contents
+    document.getElementById('guess-content').style.display = 'none';
+    document.getElementById('eliminate-content').style.display = 'none';
+    
+    // Remove active class from all tabs
+    document.getElementById('guess-tab').classList.remove('active');
+    document.getElementById('eliminate-tab').classList.remove('active');
+    
+    // Show selected tab content and mark tab as active
+    if (tabName === 'guess') {
+        document.getElementById('guess-content').style.display = 'block';
+        document.getElementById('guess-tab').classList.add('active');
+    } else if (tabName === 'eliminate') {
+        document.getElementById('eliminate-content').style.display = 'block';
+        document.getElementById('eliminate-tab').classList.add('active');
+    }
+}
+
+function clearEliminated() {
+    game.clearEliminated();
 }
 
 function toggleHelp() {
