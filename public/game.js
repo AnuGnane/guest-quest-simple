@@ -30,6 +30,36 @@ class GuestQuestGame {
         this.connect();
         this.setupEventListeners();
         this.loadCharacterSets();
+        this.generateRandomUsername();
+    }
+    
+    generateRandomUsername() {
+        const seaCreatures = [
+            'Squid', 'Starfish', 'Octopus', 'Jellyfish', 'Seahorse', 'Dolphin', 
+            'Whale', 'Shark', 'Crab', 'Lobster', 'Shrimp', 'Turtle', 'Seal', 
+            'Otter', 'Manta', 'Coral', 'Anemone', 'Urchin', 'Clam', 'Oyster',
+            'Barracuda', 'Angelfish', 'Clownfish', 'Pufferfish', 'Swordfish',
+            'Stingray', 'Moray', 'Grouper', 'Flounder', 'Marlin'
+        ];
+        
+        const randomName = seaCreatures[Math.floor(Math.random() * seaCreatures.length)];
+        const randomNumber = Math.floor(Math.random() * 999) + 1;
+        
+        this.playerName = `${randomName}${randomNumber}`;
+        document.getElementById('player-name').value = this.playerName;
+        document.getElementById('display-username').textContent = this.playerName;
+        document.getElementById('current-username').textContent = this.playerName;
+        
+        // Show username in header
+        document.getElementById('user-display').style.display = 'block';
+        
+        // Show username screen briefly with auto-generated name, then auto-continue after 2 seconds
+        document.getElementById('username-screen').style.display = 'block';
+        
+        // Auto-continue after 2 seconds unless user interacts
+        this.autoAdvanceTimer = setTimeout(() => {
+            this.setUsername();
+        }, 2000);
     }
     
     async loadCharacterSets() {
@@ -98,6 +128,12 @@ class GuestQuestGame {
         // Username validation
         document.getElementById('player-name').addEventListener('input', (e) => {
             this.validateUsername(e.target.value);
+            
+            // Cancel auto-advance if user starts typing
+            if (this.autoAdvanceTimer) {
+                clearTimeout(this.autoAdvanceTimer);
+                this.autoAdvanceTimer = null;
+            }
         });
     }
     
@@ -115,6 +151,12 @@ class GuestQuestGame {
     }
     
     setUsername() {
+        // Clear auto-advance timer if it exists
+        if (this.autoAdvanceTimer) {
+            clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
+        }
+        
         const nameInput = document.getElementById('player-name');
         const username = nameInput.value.trim();
         
@@ -133,6 +175,34 @@ class GuestQuestGame {
         // Hide username screen, show room selection
         document.getElementById('username-screen').style.display = 'none';
         document.getElementById('room-selection-screen').style.display = 'block';
+    }
+    
+    generateNewUsername() {
+        // Clear auto-advance timer
+        if (this.autoAdvanceTimer) {
+            clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
+        }
+        
+        // Generate new random username
+        const seaCreatures = [
+            'Squid', 'Starfish', 'Octopus', 'Jellyfish', 'Seahorse', 'Dolphin', 
+            'Whale', 'Shark', 'Crab', 'Lobster', 'Shrimp', 'Turtle', 'Seal', 
+            'Otter', 'Manta', 'Coral', 'Anemone', 'Urchin', 'Clam', 'Oyster',
+            'Barracuda', 'Angelfish', 'Clownfish', 'Pufferfish', 'Swordfish',
+            'Stingray', 'Moray', 'Grouper', 'Flounder', 'Marlin'
+        ];
+        
+        const randomName = seaCreatures[Math.floor(Math.random() * seaCreatures.length)];
+        const randomNumber = Math.floor(Math.random() * 999) + 1;
+        
+        const newUsername = `${randomName}${randomNumber}`;
+        document.getElementById('player-name').value = newUsername;
+        
+        // Restart auto-advance timer
+        this.autoAdvanceTimer = setTimeout(() => {
+            this.setUsername();
+        }, 2000);
     }
     
     changeUsername() {
@@ -581,15 +651,47 @@ class GuestQuestGame {
         
         if (result.type === 'reveal_attribute') {
             message += ` Revealed: ${result.attribute} = ${result.value}`;
+            this.addLogMessage(message);
         } else if (result.type === 'elimination_hint') {
             message += ` Eliminated: ${result.eliminatedCharacters.join(', ')}`;
+            this.addLogMessage(message);
+            
+            // Show elimination hint popup
+            this.showEliminationHintModal(player, result.eliminatedCharacters);
+            
+            // Save state for undo before auto-eliminating
+            this.eliminationHistory.push(new Set(this.eliminatedCharacters));
+            this.eliminationRedoStack = []; // Clear redo stack
+            
+            // Auto-mark characters as eliminated
+            result.eliminatedCharacters.forEach(characterName => {
+                this.eliminatedCharacters.add(characterName);
+                const charEl = document.querySelector(`[data-character="${characterName}"]`);
+                if (charEl) {
+                    charEl.classList.add('eliminated');
+                }
+            });
+            
+            // Update elimination visibility
+            this.updateEliminationVisibility();
         } else if (result.type === 'category_scan') {
             message += ` Categories revealed!`;
+            this.addLogMessage(message);
         } else {
             message += ` ${result.message || ''}`;
+            this.addLogMessage(message);
         }
+    }
+    
+    showEliminationHintModal(player, eliminatedCharacters) {
+        document.getElementById('elimination-hint-player').textContent = player;
         
-        this.addLogMessage(message);
+        const eliminatedList = document.getElementById('eliminated-characters-list');
+        eliminatedList.innerHTML = eliminatedCharacters.map(name => 
+            `<div class="eliminated-character-item">❌ ${name}</div>`
+        ).join('');
+        
+        document.getElementById('elimination-hint-modal').style.display = 'flex';
     }
     
     handlePowerUpsUpdated(payload) {
@@ -1198,6 +1300,16 @@ function answerQuestion(answer) {
 
 function answerCustom() {
     game.answerCustom();
+}
+
+function closeEliminationHintModal() {
+    document.getElementById('elimination-hint-modal').style.display = 'none';
+}
+
+function generateNewUsername() {
+    if (window.game) {
+        window.game.generateNewUsername();
+    }
 }
 
 function toggleAttributes() {

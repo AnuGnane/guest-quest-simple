@@ -23,14 +23,15 @@
         <!-- Username Entry -->
         <div id="username-screen" class="screen">
             <div class="form-group">
-                <label for="player-name">Enter Your Username:</label>
+                <label for="player-name">Your Username (auto-generated):</label>
                 <input type="text" id="player-name" placeholder="Your username" maxlength="20">
                 <div class="username-rules">
-                    <small>Username must be 3-20 characters, letters and numbers only</small>
+                    <small>Auto-generated username ready! You can edit it if you want, or just continue.</small>
                 </div>
             </div>
             <div class="button-group">
                 <button id="set-username-btn" onclick="setUsername()">Continue</button>
+                <button id="generate-new-username" onclick="generateNewUsername()">Generate New Name</button>
             </div>
         </div>
 
@@ -203,6 +204,27 @@
         <!-- Floating Question Button (shown when modal is hidden) -->
         <div id="floating-question-btn" class="floating-btn" style="display: none;" onclick="showQuestionModal()">
             ❓ Answer Question
+        </div>
+
+        <!-- Elimination Hint Modal -->
+        <div id="elimination-hint-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>❌ Elimination Hint</h3>
+                    <button onclick="closeEliminationHintModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="elimination-hint-text">
+                        <p><strong id="elimination-hint-player"></strong> used an Elimination Hint!</p>
+                        <p>The following characters are <strong>NOT</strong> the target:</p>
+                        <div id="eliminated-characters-list"></div>
+                        <p class="hint-note">These characters have been automatically marked as eliminated on your board.</p>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="closeEliminationHintModal()" class="primary-btn">Got it!</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
