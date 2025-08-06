@@ -652,6 +652,9 @@ class GuestQuestGame {
         if (result.type === 'reveal_attribute') {
             message += ` Revealed: ${result.attribute} = ${result.value}`;
             this.addLogMessage(message);
+            
+            // Show reveal attribute popup
+            this.showRevealAttributeModal(player, result.attribute, result.value);
         } else if (result.type === 'elimination_hint') {
             message += ` Eliminated: ${result.eliminatedCharacters.join(', ')}`;
             this.addLogMessage(message);
@@ -692,6 +695,14 @@ class GuestQuestGame {
         ).join('');
         
         document.getElementById('elimination-hint-modal').style.display = 'flex';
+    }
+    
+    showRevealAttributeModal(player, attribute, value) {
+        document.getElementById('reveal-attribute-player').textContent = player;
+        document.getElementById('revealed-attribute-name').textContent = this.formatAttributeName(attribute) + ':';
+        document.getElementById('revealed-attribute-value').textContent = value;
+        
+        document.getElementById('reveal-attribute-modal').style.display = 'flex';
     }
     
     handlePowerUpsUpdated(payload) {
@@ -950,15 +961,18 @@ class GuestQuestGame {
         if (timerEl) {
             timerEl.textContent = `${this.timeRemaining}s`;
             
-            // Change color based on time remaining
+            // Change background color based on time remaining, keep text black
             if (this.timeRemaining <= 10) {
-                timerEl.style.color = '#dc3545';
+                timerEl.style.backgroundColor = '#dc3545';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'bold';
             } else if (this.timeRemaining <= 30) {
-                timerEl.style.color = '#fd7e14';
+                timerEl.style.backgroundColor = '#fd7e14';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'bold';
             } else {
-                timerEl.style.color = '#28a745';
+                timerEl.style.backgroundColor = '#28a745';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'normal';
             }
         }
@@ -1103,15 +1117,18 @@ class GuestQuestGame {
         if (timerEl) {
             timerEl.textContent = `${this.timeRemaining}s`;
             
-            // Change color based on time remaining
+            // Change background color based on time remaining, keep text black
             if (this.timeRemaining <= 10) {
-                timerEl.style.color = '#dc3545';
+                timerEl.style.backgroundColor = '#dc3545';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'bold';
             } else if (this.timeRemaining <= 30) {
-                timerEl.style.color = '#fd7e14';
+                timerEl.style.backgroundColor = '#fd7e14';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'bold';
             } else {
-                timerEl.style.color = '#28a745';
+                timerEl.style.backgroundColor = '#28a745';
+                timerEl.style.color = 'black';
                 timerEl.style.fontWeight = 'normal';
             }
         }
@@ -1304,6 +1321,10 @@ function answerCustom() {
 
 function closeEliminationHintModal() {
     document.getElementById('elimination-hint-modal').style.display = 'none';
+}
+
+function closeRevealAttributeModal() {
+    document.getElementById('reveal-attribute-modal').style.display = 'none';
 }
 
 function generateNewUsername() {

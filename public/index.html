@@ -226,6 +226,32 @@
                 </div>
             </div>
         </div>
+
+        <!-- Reveal Attribute Modal -->
+        <div id="reveal-attribute-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔍 Attribute Revealed</h3>
+                    <button onclick="closeRevealAttributeModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="reveal-attribute-text">
+                        <p><strong id="reveal-attribute-player"></strong> used Reveal Attribute!</p>
+                        <p>The target character's attribute has been revealed:</p>
+                        <div id="revealed-attribute-info">
+                            <div class="revealed-attribute-item">
+                                <span class="attribute-name" id="revealed-attribute-name"></span>
+                                <span class="attribute-value" id="revealed-attribute-value"></span>
+                            </div>
+                        </div>
+                        <p class="hint-note">Use this information to narrow down your guesses!</p>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="closeRevealAttributeModal()" class="primary-btn">Got it!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="game.js"></script>
