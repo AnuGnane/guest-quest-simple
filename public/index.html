@@ -70,6 +70,7 @@
         <div id="lobby-screen" class="screen" style="display: none;">
             <div class="room-header">
                 <h3>Room: <span id="current-room-code"></span></h3>
+                <button id="copy-room-code" onclick="copyRoomCode()" title="Copy room code">📋</button>
                 <button id="leave-room-btn" onclick="leaveRoom()">Leave Room</button>
             </div>
 
@@ -85,28 +86,13 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen" style="display: none;">
             <div class="game-info">
-                <div id="your-character">Your character: <strong id="character-name"></strong></div>
+                <div id="your-character">
+                    Your character: <strong id="character-name"></strong>
+                    <span id="turn-timer" class="turn-timer">60s</span>
+                </div>
                 <div id="character-details"></div>
                 <div id="current-turn">
                     Current turn: <span id="turn-player"></span>
-                    <span id="turn-timer" class="turn-timer">60s</span>
-                </div>
-                <div class="attributes-toggle">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="show-attributes" onchange="toggleAttributes()">
-                        <span class="slider"></span>
-                        Show All Character Attributes
-                    </label>
-                </div>
-                <div id="character-attributes" class="character-attributes" style="display: none;">
-                    <div class="attributes-header">
-                        <h4>Character Reference Sheet</h4>
-                        <div class="attributes-controls">
-                            <button id="collapse-all" onclick="collapseAllAttributes()">Collapse All</button>
-                            <button id="expand-all" onclick="expandAllAttributes()">Expand All</button>
-                        </div>
-                    </div>
-                    <div id="all-characters-attributes"></div>
                 </div>
             </div>
 
@@ -138,6 +124,11 @@
                                 <input type="checkbox" id="show-eliminations" onchange="toggleEliminations()" checked>
                                 <span class="slider"></span>
                                 Show Eliminations
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show-attributes" onchange="toggleAttributes()">
+                                <span class="slider"></span>
+                                Show Character Info
                             </label>
                             <button id="undo-btn" onclick="undoElimination()">↶ Undo</button>
                             <button id="redo-btn" onclick="redoElimination()">↷ Redo</button>

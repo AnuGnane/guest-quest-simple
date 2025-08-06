@@ -259,6 +259,41 @@ class GuestQuestGame {
         document.getElementById('character-set-select').disabled = !enabled;
     }
     
+    copyRoomCode() {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(this.roomCode).then(() => {
+                // Visual feedback
+                const btn = document.getElementById('copy-room-code');
+                const originalText = btn.textContent;
+                btn.textContent = '✓';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 1000);
+            }).catch(() => {
+                this.fallbackCopyRoomCode();
+            });
+        } else {
+            this.fallbackCopyRoomCode();
+        }
+    }
+    
+    fallbackCopyRoomCode() {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = this.roomCode;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert(`Room code copied: ${this.roomCode}`);
+        } catch (err) {
+            alert(`Room code: ${this.roomCode}`);
+        }
+        document.body.removeChild(textArea);
+    }
+
     leaveRoom() {
         if (this.gameStarted) {
             if (!confirm('Are you sure you want to leave the game in progress?')) {
@@ -386,63 +421,65 @@ class GuestQuestGame {
         const detailsEl = document.getElementById('character-details');
         let details = [];
         
+        // Simplified to 4 key attributes
         if (character.gender) details.push(`Gender: ${character.gender}`);
-        if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
-        if (character.hasGlasses !== undefined) details.push(`Glasses: ${character.hasGlasses ? 'yes' : 'no'}`);
         if (character.age) details.push(`Age: ${character.age}`);
+        if (character.location) details.push(`Location: ${character.location}`);
+        if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
         
         detailsEl.textContent = details.join(' • ');
         
         // Store full character for attributes display
         this.yourCharacterFull = character;
-        this.updateAttributesDisplay();
     }
     
-    updateAttributesDisplay() {
+    updateCharacterBoardAttributes() {
         if (!this.fullCharacterData || !this.characterSet) return;
         
-        const allCharactersEl = document.getElementById('all-characters-attributes');
         const characterSet = this.fullCharacterData[this.characterSet];
-        
         if (!characterSet) return;
         
-        let attributesHtml = '';
+        const showAttributes = document.getElementById('show-attributes').checked;
         
-        characterSet.characters.forEach(character => {
-            const isYourCharacter = this.yourCharacterFull && character.name === this.yourCharacterFull.name;
+        document.querySelectorAll('.unified-character').forEach(charEl => {
+            const characterName = charEl.getAttribute('data-character');
+            const character = characterSet.characters.find(c => c.name === characterName);
             
-            attributesHtml += `
-                <div class="character-card ${isYourCharacter ? 'your-character' : ''}">
-                    <div class="character-header" onclick="toggleCharacterCard('${character.id}')">
-                        <img src="${character.image}" alt="${character.name}" class="character-thumb">
-                        <h5>${character.name} ${isYourCharacter ? '(Your Character)' : ''}</h5>
-                        <span class="expand-icon" id="icon-${character.id}">▼</span>
-                    </div>
-                    <div class="character-attributes-grid" id="attrs-${character.id}" style="display: none;">
-            `;
+            if (!character) return;
             
-            // Add all attributes
-            Object.keys(character.attributes).forEach(key => {
-                let value = character.attributes[key];
-                if (typeof value === 'boolean') {
-                    value = value ? 'Yes' : 'No';
+            // Remove existing attributes
+            const existingAttributes = charEl.querySelector('.character-attributes-overlay');
+            if (existingAttributes) {
+                existingAttributes.remove();
+            }
+            
+            if (showAttributes) {
+                // Add simplified attributes overlay
+                const attributesOverlay = document.createElement('div');
+                attributesOverlay.className = 'character-attributes-overlay';
+                
+                let attributesHtml = '<div class="character-attributes-content">';
+                
+                // Only show the 4 key attributes
+                if (character.attributes.gender) {
+                    attributesHtml += `<div class="attr-item">Gender: ${character.attributes.gender}</div>`;
+                }
+                if (character.attributes.age) {
+                    attributesHtml += `<div class="attr-item">Age: ${character.attributes.age}</div>`;
+                }
+                if (character.attributes.location) {
+                    attributesHtml += `<div class="attr-item">Location: ${character.attributes.location}</div>`;
+                }
+                if (character.attributes.hairColor) {
+                    attributesHtml += `<div class="attr-item">Hair: ${character.attributes.hairColor}</div>`;
                 }
                 
-                attributesHtml += `
-                    <div class="attribute-item">
-                        <span class="attribute-label">${this.formatAttributeName(key)}:</span>
-                        <span class="attribute-value">${value}</span>
-                    </div>
-                `;
-            });
-            
-            attributesHtml += `
-                    </div>
-                </div>
-            `;
+                attributesHtml += '</div>';
+                attributesOverlay.innerHTML = attributesHtml;
+                
+                charEl.appendChild(attributesOverlay);
+            }
         });
-        
-        allCharactersEl.innerHTML = attributesHtml;
     }
     
     formatAttributeName(key) {
@@ -454,10 +491,7 @@ class GuestQuestGame {
     }
     
     toggleAttributes() {
-        const attributesEl = document.getElementById('character-attributes');
-        const showAttributes = document.getElementById('show-attributes').checked;
-        
-        attributesEl.style.display = showAttributes ? 'block' : 'none';
+        this.updateCharacterBoardAttributes();
     }
     
     setupQuestionHints() {
@@ -635,6 +669,9 @@ class GuestQuestGame {
             
             unifiedBoard.appendChild(charEl);
         });
+        
+        // Initialize attributes display
+        this.updateCharacterBoardAttributes();
     }
     
     toggleElimination(characterName) {
@@ -1106,6 +1143,10 @@ function changeUsername() {
 
 function leaveRoom() {
     game.leaveRoom();
+}
+
+function copyRoomCode() {
+    game.copyRoomCode();
 }
 
 function endTurn() {
