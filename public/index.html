@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Quest - Simple</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -14,10 +16,10 @@
                 Playing as: <strong id="current-username"></strong>
             </div>
         </div>
-        
+
         <!-- Connection Status -->
         <div id="connection-status" class="status">Connecting...</div>
-        
+
         <!-- Username Entry -->
         <div id="username-screen" class="screen">
             <div class="form-group">
@@ -38,22 +40,22 @@
                 <h3>Welcome, <span id="display-username"></span>!</h3>
                 <button id="change-username-btn" onclick="changeUsername()">Change Username</button>
             </div>
-            
+
             <div class="form-group">
                 <label for="character-set-select">Choose Character Set:</label>
                 <select id="character-set-select">
                     <option value="classic">Classic Characters</option>
                 </select>
             </div>
-            
+
             <div class="room-actions">
                 <div class="action-section">
                     <h4>Create New Room</h4>
                     <button id="create-room-btn" onclick="createRoom()">Create Room</button>
                 </div>
-                
+
                 <div class="divider">OR</div>
-                
+
                 <div class="action-section">
                     <h4>Join Existing Room</h4>
                     <div class="join-room">
@@ -70,7 +72,7 @@
                 <h3>Room: <span id="current-room-code"></span></h3>
                 <button id="leave-room-btn" onclick="leaveRoom()">Leave Room</button>
             </div>
-            
+
             <div class="room-info">
                 <div id="players-list"></div>
                 <div class="room-controls">
@@ -79,7 +81,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Game Screen -->
         <div id="game-screen" class="screen" style="display: none;">
             <div class="game-info">
@@ -93,17 +95,26 @@
                     <label class="toggle-switch">
                         <input type="checkbox" id="show-attributes" onchange="toggleAttributes()">
                         <span class="slider"></span>
-                        Show Character Attributes
+                        Show All Character Attributes
                     </label>
                 </div>
-                <div id="character-attributes" class="character-attributes" style="display: none;"></div>
+                <div id="character-attributes" class="character-attributes" style="display: none;">
+                    <div class="attributes-header">
+                        <h4>Character Reference Sheet</h4>
+                        <div class="attributes-controls">
+                            <button id="collapse-all" onclick="collapseAllAttributes()">Collapse All</button>
+                            <button id="expand-all" onclick="expandAllAttributes()">Expand All</button>
+                        </div>
+                    </div>
+                    <div id="all-characters-attributes"></div>
+                </div>
             </div>
-            
+
             <div class="powerups-section">
                 <h4>🎯 Power-ups Available:</h4>
                 <div id="powerups-grid" class="powerups-grid"></div>
             </div>
-            
+
             <div class="help-section">
                 <button id="toggle-help" onclick="toggleHelp()">💡 Show Question Hints</button>
                 <div id="question-hints" style="display: none;">
@@ -111,14 +122,14 @@
                     <div id="hint-content"></div>
                 </div>
             </div>
-            
+
             <div class="game-actions">
                 <div id="question-section">
                     <input type="text" id="question-input" placeholder="Ask a yes/no question..." maxlength="100">
                     <button id="ask-btn" onclick="askQuestion()">Ask Question</button>
                     <button id="end-turn-btn" onclick="endTurn()">End Turn</button>
                 </div>
-                
+
                 <div class="characters-section">
                     <div class="board-controls">
                         <h4>Characters Board</h4>
@@ -133,15 +144,16 @@
                             <button id="reset-board-btn" onclick="resetBoard()">🔄 Reset</button>
                         </div>
                     </div>
-                    
+
                     <div class="board-instructions">
-                        <p><strong>Left click:</strong> Make a guess | <strong>Right click:</strong> Mark as eliminated</p>
+                        <p><strong>Left click:</strong> Make a guess | <strong>Right click:</strong> Mark as eliminated
+                        </p>
                     </div>
-                    
+
                     <div id="unified-board" class="unified-board"></div>
                 </div>
             </div>
-            
+
             <div class="game-stats">
                 <h4>Game Statistics:</h4>
                 <div class="stats-grid">
@@ -159,19 +171,19 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="game-log">
                 <h4>Game Log:</h4>
                 <div id="log-messages"></div>
             </div>
         </div>
-        
+
         <!-- Game Over Screen -->
         <div id="game-over-screen" class="screen" style="display: none;">
             <h2 id="game-result"></h2>
             <button onclick="location.reload()">Play Again</button>
         </div>
-        
+
         <!-- Question Modal -->
         <div id="question-modal" class="modal" style="display: none;">
             <div class="modal-content">
@@ -188,20 +200,22 @@
                             <button id="answer-no" onclick="answerQuestion('no')">❌ No</button>
                         </div>
                         <div class="answer-custom">
-                            <input type="text" id="answer-input" placeholder="Or type a custom answer..." maxlength="50">
+                            <input type="text" id="answer-input" placeholder="Or type a custom answer..."
+                                maxlength="50">
                             <button id="answer-custom-btn" onclick="answerCustom()">Send</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Floating Question Button (shown when modal is hidden) -->
         <div id="floating-question-btn" class="floating-btn" style="display: none;" onclick="showQuestionModal()">
             ❓ Answer Question
         </div>
     </div>
-    
+
     <script src="game.js"></script>
 </body>
+
 </html>

@@ -10,13 +10,30 @@ const wss = new WebSocket.Server({ server });
 // Serve static files
 app.use(express.static('public'));
 
-// API endpoint for character sets
+// API endpoint for character sets (names only)
 app.get('/api/character-sets', (req, res) => {
   const sets = {};
   Object.keys(characterSets).forEach(key => {
     sets[key] = characterSets[key].map(char => char.name);
   });
   res.json(sets);
+});
+
+// API endpoint for full character data
+app.get('/api/characters/:setName', (req, res) => {
+  const setName = req.params.setName;
+  const characterSet = characterDatabase[setName];
+  
+  if (!characterSet) {
+    return res.status(404).json({ error: 'Character set not found' });
+  }
+  
+  res.json(characterSet);
+});
+
+// API endpoint for all character data
+app.get('/api/characters', (req, res) => {
+  res.json(characterDatabase);
 });
 
 // Power-ups available in the game
@@ -47,51 +64,162 @@ const gameState = {
   players: new Map()
 };
 
-// Enhanced character sets with rich categories and attributes
-const characterSets = {
-  classic: [
-    {
-      name: 'Alice', gender: 'female', hairColor: 'blonde', hasGlasses: false, age: 'young',
-      occupation: 'teacher', hobby: 'reading', personality: 'cheerful', location: 'city',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Bob', gender: 'male', hairColor: 'brown', hasGlasses: true, age: 'middle',
-      occupation: 'engineer', hobby: 'gaming', personality: 'analytical', location: 'suburbs',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Charlie', gender: 'male', hairColor: 'black', hasGlasses: false, age: 'old',
-      occupation: 'retired', hobby: 'gardening', personality: 'wise', location: 'countryside',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Diana', gender: 'female', hairColor: 'red', hasGlasses: true, age: 'young',
-      occupation: 'artist', hobby: 'painting', personality: 'creative', location: 'city',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Eve', gender: 'female', hairColor: 'black', hasGlasses: false, age: 'middle',
-      occupation: 'doctor', hobby: 'hiking', personality: 'caring', location: 'city',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Frank', gender: 'male', hairColor: 'grey', hasGlasses: true, age: 'old',
-      occupation: 'professor', hobby: 'chess', personality: 'intellectual', location: 'city',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Grace', gender: 'female', hairColor: 'brown', hasGlasses: false, age: 'young',
-      occupation: 'chef', hobby: 'cooking', personality: 'energetic', location: 'city',
-      image: '/images/characters/user.png'
-    },
-    {
-      name: 'Henry', gender: 'male', hairColor: 'blonde', hasGlasses: false, age: 'middle',
-      occupation: 'pilot', hobby: 'flying', personality: 'adventurous', location: 'suburbs',
-      image: '/images/characters/user.png'
-    }
-  ]
+// Enhanced character database with organized structure
+const characterDatabase = {
+  classic: {
+    setName: 'Classic Characters',
+    description: 'Traditional character set with diverse occupations and personalities',
+    characters: [
+      {
+        id: 'alice',
+        name: 'Alice',
+        image: '/images/characters/classic/alice.png',
+        attributes: {
+          gender: 'female',
+          hairColor: 'blonde',
+          hasGlasses: false,
+          age: 'young',
+          occupation: 'teacher',
+          hobby: 'reading',
+          personality: 'cheerful',
+          location: 'city',
+          eyeColor: 'blue',
+          height: 'average'
+        }
+      },
+      {
+        id: 'bob',
+        name: 'Bob',
+        image: '/images/characters/classic/bob.png',
+        attributes: {
+          gender: 'male',
+          hairColor: 'brown',
+          hasGlasses: true,
+          age: 'middle',
+          occupation: 'engineer',
+          hobby: 'gaming',
+          personality: 'analytical',
+          location: 'suburbs',
+          eyeColor: 'brown',
+          height: 'tall'
+        }
+      },
+      {
+        id: 'charlie',
+        name: 'Charlie',
+        image: '/images/characters/classic/charlie.png',
+        attributes: {
+          gender: 'male',
+          hairColor: 'black',
+          hasGlasses: false,
+          age: 'old',
+          occupation: 'retired',
+          hobby: 'gardening',
+          personality: 'wise',
+          location: 'countryside',
+          eyeColor: 'green',
+          height: 'short'
+        }
+      },
+      {
+        id: 'diana',
+        name: 'Diana',
+        image: '/images/characters/classic/diana.png',
+        attributes: {
+          gender: 'female',
+          hairColor: 'red',
+          hasGlasses: true,
+          age: 'young',
+          occupation: 'artist',
+          hobby: 'painting',
+          personality: 'creative',
+          location: 'city',
+          eyeColor: 'hazel',
+          height: 'average'
+        }
+      },
+      {
+        id: 'eve',
+        name: 'Eve',
+        image: '/images/characters/classic/eve.png',
+        attributes: {
+          gender: 'female',
+          hairColor: 'black',
+          hasGlasses: false,
+          age: 'middle',
+          occupation: 'doctor',
+          hobby: 'hiking',
+          personality: 'caring',
+          location: 'city',
+          eyeColor: 'brown',
+          height: 'tall'
+        }
+      },
+      {
+        id: 'frank',
+        name: 'Frank',
+        image: '/images/characters/classic/frank.png',
+        attributes: {
+          gender: 'male',
+          hairColor: 'grey',
+          hasGlasses: true,
+          age: 'old',
+          occupation: 'professor',
+          hobby: 'chess',
+          personality: 'intellectual',
+          location: 'city',
+          eyeColor: 'blue',
+          height: 'average'
+        }
+      },
+      {
+        id: 'grace',
+        name: 'Grace',
+        image: '/images/characters/classic/grace.png',
+        attributes: {
+          gender: 'female',
+          hairColor: 'brown',
+          hasGlasses: false,
+          age: 'young',
+          occupation: 'chef',
+          hobby: 'cooking',
+          personality: 'energetic',
+          location: 'city',
+          eyeColor: 'green',
+          height: 'short'
+        }
+      },
+      {
+        id: 'henry',
+        name: 'Henry',
+        image: '/images/characters/classic/henry.png',
+        attributes: {
+          gender: 'male',
+          hairColor: 'blonde',
+          hasGlasses: false,
+          age: 'middle',
+          occupation: 'pilot',
+          hobby: 'flying',
+          personality: 'adventurous',
+          location: 'suburbs',
+          eyeColor: 'blue',
+          height: 'tall'
+        }
+      }
+    ]
+  }
 };
+
+// Convert database to legacy format for compatibility
+const characterSets = {};
+Object.keys(characterDatabase).forEach(setKey => {
+  characterSets[setKey] = characterDatabase[setKey].characters.map(char => ({
+    ...char.attributes,
+    name: char.name,
+    image: char.image,
+    id: char.id
+  }));
+});
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {

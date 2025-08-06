@@ -948,6 +948,114 @@ input:checked + .slider:before {
     font-size: 0.9rem;
 }
 
+/* Enhanced Character Attributes Display */
+.attributes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.attributes-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.attributes-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.attributes-controls button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.attributes-controls button:hover {
+    background: #5a6268;
+}
+
+.character-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.character-card.your-character {
+    border-color: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+.character-header {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    cursor: pointer;
+    background: #f8f9fa;
+    transition: background 0.3s;
+}
+
+.character-header:hover {
+    background: #e9ecef;
+}
+
+.character-card.your-character .character-header {
+    background: #d4edda;
+}
+
+.character-card.your-character .character-header:hover {
+    background: #c3e6cb;
+}
+
+.character-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 0.75rem;
+    border: 2px solid #dee2e6;
+}
+
+.character-card.your-character .character-thumb {
+    border-color: #28a745;
+}
+
+.character-header h5 {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.expand-icon {
+    font-size: 0.8rem;
+    color: #6c757d;
+    transition: transform 0.3s;
+}
+
+.expand-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.character-attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #fdfdfd;
+}
+
 /* Floating Question Button */
 .floating-btn {
     position: fixed;

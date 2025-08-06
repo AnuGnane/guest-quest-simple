@@ -36,7 +36,13 @@ class GuestQuestGame {
         try {
             const response = await fetch('/api/character-sets');
             this.characterSets = await response.json();
+            
+            // Also load full character data
+            const fullDataResponse = await fetch('/api/characters');
+            this.fullCharacterData = await fullDataResponse.json();
+            
             console.log('Character sets loaded:', this.characterSets);
+            console.log('Full character data loaded:', this.fullCharacterData);
         } catch (error) {
             console.error('Failed to load character sets:', error);
         }
@@ -393,16 +399,31 @@ class GuestQuestGame {
     }
     
     updateAttributesDisplay() {
-        const attributesEl = document.getElementById('character-attributes');
-        if (!this.yourCharacterFull) return;
+        if (!this.fullCharacterData || !this.characterSet) return;
         
-        const character = this.yourCharacterFull;
-        let attributesHtml = '<div class="attributes-grid">';
+        const allCharactersEl = document.getElementById('all-characters-attributes');
+        const characterSet = this.fullCharacterData[this.characterSet];
         
-        // Add all attributes
-        Object.keys(character).forEach(key => {
-            if (key !== 'name' && key !== 'image') {
-                let value = character[key];
+        if (!characterSet) return;
+        
+        let attributesHtml = '';
+        
+        characterSet.characters.forEach(character => {
+            const isYourCharacter = this.yourCharacterFull && character.name === this.yourCharacterFull.name;
+            
+            attributesHtml += `
+                <div class="character-card ${isYourCharacter ? 'your-character' : ''}">
+                    <div class="character-header" onclick="toggleCharacterCard('${character.id}')">
+                        <img src="${character.image}" alt="${character.name}" class="character-thumb">
+                        <h5>${character.name} ${isYourCharacter ? '(Your Character)' : ''}</h5>
+                        <span class="expand-icon" id="icon-${character.id}">▼</span>
+                    </div>
+                    <div class="character-attributes-grid" id="attrs-${character.id}" style="display: none;">
+            `;
+            
+            // Add all attributes
+            Object.keys(character.attributes).forEach(key => {
+                let value = character.attributes[key];
                 if (typeof value === 'boolean') {
                     value = value ? 'Yes' : 'No';
                 }
@@ -413,11 +434,15 @@ class GuestQuestGame {
                         <span class="attribute-value">${value}</span>
                     </div>
                 `;
-            }
+            });
+            
+            attributesHtml += `
+                    </div>
+                </div>
+            `;
         });
         
-        attributesHtml += '</div>';
-        attributesEl.innerHTML = attributesHtml;
+        allCharactersEl.innerHTML = attributesHtml;
     }
     
     formatAttributeName(key) {
@@ -800,6 +825,30 @@ class GuestQuestGame {
         }
     }
     
+    handleTurnChanged(payload) {
+        document.getElementById('turn-player').textContent = payload.currentTurn;
+        
+        this.gameStats.turnCount++;
+        this.updateStats();
+        
+        this.isMyTurn = payload.currentTurn === this.playerName;
+        this.updateTurnControls();
+        
+        // Start turn timer
+        this.startTurnTimer(payload.timeRemaining || 60);
+        
+        // Visual feedback for turn change
+        const turnEl = document.getElementById('current-turn');
+        if (this.isMyTurn) {
+            turnEl.style.background = '#d4edda';
+            turnEl.style.color = '#155724';
+            this.addLogMessage('🎯 It\'s your turn! (60 seconds)');
+        } else {
+            turnEl.style.background = '#f8d7da';
+            turnEl.style.color = '#721c24';
+        }
+    }
+    
     handleTurnTimeout(payload) {
         this.addLogMessage(`⏰ ${payload.player}'s turn ended due to timeout`);
         if (this.turnTimer) {
@@ -1120,6 +1169,37 @@ function hideQuestionModal() {
 
 function showQuestionModal() {
     game.showQuestionModal();
+}
+
+function toggleCharacterCard(characterId) {
+    const attrsEl = document.getElementById(`attrs-${characterId}`);
+    const iconEl = document.getElementById(`icon-${characterId}`);
+    
+    if (attrsEl.style.display === 'none') {
+        attrsEl.style.display = 'grid';
+        iconEl.classList.add('expanded');
+    } else {
+        attrsEl.style.display = 'none';
+        iconEl.classList.remove('expanded');
+    }
+}
+
+function collapseAllAttributes() {
+    document.querySelectorAll('.character-attributes-grid').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.expand-icon').forEach(el => {
+        el.classList.remove('expanded');
+    });
+}
+
+function expandAllAttributes() {
+    document.querySelectorAll('.character-attributes-grid').forEach(el => {
+        el.style.display = 'grid';
+    });
+    document.querySelectorAll('.expand-icon').forEach(el => {
+        el.classList.add('expanded');
+    });
 }
 
 function toggleHelp() {
