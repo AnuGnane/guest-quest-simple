@@ -304,7 +304,9 @@ function startGame(ws, payload) {
     questionAsked: false,
     powerUpUsed: false,
     guessMade: false,
-    doubleQuestionActive: false
+    doubleQuestionActive: false,
+    doubleQuestionUsed: false,
+    questionsAskedCount: 0
   };
 
   // Send game start to all players
@@ -417,6 +419,15 @@ function makeGuess(ws, payload) {
     ws.send(JSON.stringify({
       type: 'error',
       payload: { message: 'You can only make one guess per turn!' }
+    }));
+    return;
+  }
+  
+  // Check if double question is active - no guessing allowed during double question
+  if (room.turnActions.doubleQuestionActive || (room.turnActions.questionAsked && room.turnActions.doubleQuestionUsed)) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'You cannot make guesses during a double question turn! Ask your questions first.' }
     }));
     return;
   }
@@ -551,9 +562,10 @@ function usePowerUp(ws, payload) {
 
     case 'double_question':
       room.turnActions.doubleQuestionActive = true;
+      room.turnActions.doubleQuestionUsed = true;
       result = {
         type: 'double_question',
-        message: 'You can ask two questions this turn!'
+        message: 'You can ask two questions this turn! No guessing allowed this turn.'
       };
       break;
   }
@@ -632,21 +644,29 @@ function answerQuestion(ws, payload) {
   room.pendingQuestion = null;
   
   // Handle turn logic
-  if (room.turnActions.doubleQuestionActive) {
-    // First question of double question - don't end turn yet
-    room.turnActions.questionAsked = true; // Mark first question as asked
-    room.turnActions.doubleQuestionActive = false; // Used up the power-up
-    
-    // Notify that they can ask one more question
-    broadcastToRoom(playerInfo.roomCode, {
-      type: 'double_question_used',
-      payload: {
-        player: room.pendingQuestion.askingPlayer,
-        message: 'You can ask one more question this turn!'
-      }
-    });
+  room.turnActions.questionsAskedCount++;
+  
+  if (room.turnActions.doubleQuestionUsed) {
+    // Double question turn
+    if (room.turnActions.questionsAskedCount === 1) {
+      // First question of double question - don't end turn yet
+      room.turnActions.questionAsked = true;
+      room.turnActions.doubleQuestionActive = false; // First question used up
+      
+      // Notify that they can ask one more question
+      broadcastToRoom(playerInfo.roomCode, {
+        type: 'double_question_used',
+        payload: {
+          player: room.pendingQuestion.askingPlayer,
+          message: 'You can ask one more question this turn! (No guessing allowed)'
+        }
+      });
+    } else {
+      // Second question of double - end turn
+      endTurn(room);
+    }
   } else {
-    // Normal question or second question of double - end turn
+    // Normal single question - end turn
     endTurn(room);
   }
 }
@@ -684,7 +704,9 @@ function endTurn(room) {
     questionAsked: false,
     powerUpUsed: false,
     guessMade: false,
-    doubleQuestionActive: false
+    doubleQuestionActive: false,
+    doubleQuestionUsed: false,
+    questionsAskedCount: 0
   };
   
   // Clear power-up cooldown for the player whose turn just ended

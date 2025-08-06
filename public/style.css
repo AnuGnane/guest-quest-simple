@@ -790,12 +790,30 @@ input:checked + .slider:before {
     color: white;
     padding: 1.5rem;
     border-radius: 15px 15px 0 0;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .modal-header h3 {
     margin: 0;
     font-size: 1.3rem;
+}
+
+#hide-modal-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+#hide-modal-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
 }
 
 .modal-body {
@@ -928,6 +946,36 @@ input:checked + .slider:before {
     color: #667eea;
     font-weight: bold;
     font-size: 0.9rem;
+}
+
+/* Floating Question Button */
+.floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #dc3545;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    font-weight: bold;
+    font-size: 1rem;
+    z-index: 999;
+    animation: pulse 2s infinite;
+    transition: all 0.3s;
+}
+
+.floating-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.6);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4); }
+    50% { box-shadow: 0 4px 20px rgba(220, 53, 69, 0.8); }
+    100% { box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4); }
 }
 
 .game-log {

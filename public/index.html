@@ -177,6 +177,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>❓ Question from <span id="asking-player-name"></span></h3>
+                    <button id="hide-modal-btn" onclick="hideQuestionModal()">👁️ Hide</button>
                 </div>
                 <div class="modal-body">
                     <div class="question-text" id="modal-question"></div>
@@ -193,6 +194,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Floating Question Button (shown when modal is hidden) -->
+        <div id="floating-question-btn" class="floating-btn" style="display: none;" onclick="showQuestionModal()">
+            ❓ Answer Question
         </div>
     </div>
     

@@ -370,6 +370,9 @@ class GuestQuestGame {
         // Start initial timer
         this.startTurnTimer(60);
         
+        // Initialize attributes display
+        this.updateAttributesDisplay();
+        
         this.addLogMessage(`Game started! Your character is ${payload.yourCharacter.name} (${payload.characterSet} set)`);
     }
     
@@ -812,6 +815,7 @@ class GuestQuestGame {
         document.getElementById('asking-player-name').textContent = payload.askingPlayer;
         document.getElementById('modal-question').textContent = payload.question;
         document.getElementById('question-modal').style.display = 'flex';
+        document.getElementById('floating-question-btn').style.display = 'none';
         
         // Focus on custom answer input
         document.getElementById('answer-input').focus();
@@ -835,8 +839,9 @@ class GuestQuestGame {
     }
     
     handleQuestionAnswered(payload) {
-        // Hide modal if it's open
+        // Hide modal and floating button
         document.getElementById('question-modal').style.display = 'none';
+        document.getElementById('floating-question-btn').style.display = 'none';
         
         // Add to log
         this.addLogMessage(`❓ ${payload.askingPlayer} asked: "${payload.question}" - ${payload.targetPlayer} answered: "${payload.answer}"`);
@@ -844,6 +849,17 @@ class GuestQuestGame {
         // Update stats
         this.gameStats.questionsAsked++;
         this.updateStats();
+    }
+    
+    hideQuestionModal() {
+        document.getElementById('question-modal').style.display = 'none';
+        document.getElementById('floating-question-btn').style.display = 'block';
+    }
+    
+    showQuestionModal() {
+        document.getElementById('question-modal').style.display = 'flex';
+        document.getElementById('floating-question-btn').style.display = 'none';
+        document.getElementById('answer-input').focus();
     }
     
     answerQuestion(answer) {
@@ -874,14 +890,61 @@ class GuestQuestGame {
         this.addLogMessage(`🎯 ${payload.player} used Double Question power-up - ${payload.message}`);
     }
     
+    startTurnTimer(seconds) {
+        // Clear existing timer
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+        }
+        
+        this.timeRemaining = seconds;
+        this.updateTimerDisplay();
+        
+        this.turnTimer = setInterval(() => {
+            this.timeRemaining--;
+            this.updateTimerDisplay();
+            
+            if (this.timeRemaining <= 0) {
+                clearInterval(this.turnTimer);
+                this.turnTimer = null;
+            }
+        }, 1000);
+    }
+    
+    updateTimerDisplay() {
+        const timerEl = document.getElementById('turn-timer');
+        if (timerEl) {
+            timerEl.textContent = `${this.timeRemaining}s`;
+            
+            // Change color based on time remaining
+            if (this.timeRemaining <= 10) {
+                timerEl.style.color = '#dc3545';
+                timerEl.style.fontWeight = 'bold';
+            } else if (this.timeRemaining <= 30) {
+                timerEl.style.color = '#fd7e14';
+                timerEl.style.fontWeight = 'bold';
+            } else {
+                timerEl.style.color = '#28a745';
+                timerEl.style.fontWeight = 'normal';
+            }
+        }
+    }
+    
     updateTurnControls() {
         // Update all turn-based controls
         document.getElementById('question-input').disabled = !this.isMyTurn;
         document.getElementById('ask-btn').disabled = !this.isMyTurn;
         document.getElementById('end-turn-btn').disabled = !this.isMyTurn;
         
-        const characterBtns = document.querySelectorAll('.character-btn');
-        characterBtns.forEach(btn => btn.disabled = !this.isMyTurn);
+        const characterBtns = document.querySelectorAll('.unified-character');
+        characterBtns.forEach(btn => {
+            if (!this.isMyTurn) {
+                btn.classList.add('disabled');
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.classList.remove('disabled');
+                btn.style.pointerEvents = 'auto';
+            }
+        });
         
         const powerUpBtns = document.querySelectorAll('.powerup-item');
         powerUpBtns.forEach(btn => {
@@ -1049,6 +1112,14 @@ function answerCustom() {
 
 function toggleAttributes() {
     game.toggleAttributes();
+}
+
+function hideQuestionModal() {
+    game.hideQuestionModal();
+}
+
+function showQuestionModal() {
+    game.showQuestionModal();
 }
 
 function toggleHelp() {
