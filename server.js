@@ -77,14 +77,8 @@ const characterDatabase = {
         attributes: {
           gender: 'female',
           hairColor: 'blonde',
-          hasGlasses: false,
           age: 28,
-          occupation: 'teacher',
-          hobby: 'reading',
-          personality: 'cheerful',
-          location: 'city',
-          eyeColor: 'blue',
-          height: 'average'
+          location: 'city'
         }
       },
       {
@@ -94,14 +88,8 @@ const characterDatabase = {
         attributes: {
           gender: 'male',
           hairColor: 'brown',
-          hasGlasses: true,
           age: 34,
-          occupation: 'engineer',
-          hobby: 'gaming',
-          personality: 'analytical',
-          location: 'suburbs',
-          eyeColor: 'brown',
-          height: 'tall'
+          location: 'suburbs'
         }
       },
       {
@@ -111,14 +99,8 @@ const characterDatabase = {
         attributes: {
           gender: 'male',
           hairColor: 'black',
-          hasGlasses: false,
           age: 67,
-          occupation: 'retired',
-          hobby: 'gardening',
-          personality: 'wise',
-          location: 'countryside',
-          eyeColor: 'green',
-          height: 'short'
+          location: 'countryside'
         }
       },
       {
@@ -128,14 +110,8 @@ const characterDatabase = {
         attributes: {
           gender: 'female',
           hairColor: 'red',
-          hasGlasses: true,
           age: 26,
-          occupation: 'artist',
-          hobby: 'painting',
-          personality: 'creative',
-          location: 'city',
-          eyeColor: 'hazel',
-          height: 'average'
+          location: 'city'
         }
       },
       {
@@ -145,14 +121,8 @@ const characterDatabase = {
         attributes: {
           gender: 'female',
           hairColor: 'black',
-          hasGlasses: false,
           age: 42,
-          occupation: 'doctor',
-          hobby: 'hiking',
-          personality: 'caring',
-          location: 'city',
-          eyeColor: 'brown',
-          height: 'tall'
+          location: 'city'
         }
       },
       {
@@ -162,14 +132,8 @@ const characterDatabase = {
         attributes: {
           gender: 'male',
           hairColor: 'grey',
-          hasGlasses: true,
           age: 58,
-          occupation: 'professor',
-          hobby: 'chess',
-          personality: 'intellectual',
-          location: 'city',
-          eyeColor: 'blue',
-          height: 'average'
+          location: 'city'
         }
       },
       {
@@ -179,14 +143,8 @@ const characterDatabase = {
         attributes: {
           gender: 'female',
           hairColor: 'brown',
-          hasGlasses: false,
           age: 31,
-          occupation: 'chef',
-          hobby: 'cooking',
-          personality: 'energetic',
-          location: 'city',
-          eyeColor: 'green',
-          height: 'short'
+          location: 'city'
         }
       },
       {
@@ -196,14 +154,8 @@ const characterDatabase = {
         attributes: {
           gender: 'male',
           hairColor: 'blonde',
-          hasGlasses: false,
           age: 39,
-          occupation: 'pilot',
-          hobby: 'flying',
-          personality: 'adventurous',
-          location: 'suburbs',
-          eyeColor: 'blue',
-          height: 'tall'
+          location: 'suburbs'
         }
       }
     ]
