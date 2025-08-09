@@ -64,100 +64,52 @@ const gameState = {
   players: new Map()
 };
 
+// Helper function to create character objects with consistent structure
+function createCharacter(id, name, gender, hairColor, age, location) {
+  return {
+    id: id,
+    name: name,
+    image: `/images/characters/classic/${id}.png`,
+    attributes: {
+      gender: gender,
+      hairColor: hairColor,
+      age: age,
+      location: location
+    }
+  };
+}
+
 // Enhanced character database with organized structure
+// Characters are sorted alphabetically by name for consistent game board ordering
 const characterDatabase = {
   classic: {
     setName: 'Classic Characters',
     description: 'Traditional character set with diverse occupations and personalities',
     characters: [
-      {
-        id: 'alice',
-        name: 'Alice',
-        image: '/images/characters/classic/alice.png',
-        attributes: {
-          gender: 'female',
-          hairColor: 'blonde',
-          age: 28,
-          location: 'city'
-        }
-      },
-      {
-        id: 'bob',
-        name: 'Bob',
-        image: '/images/characters/classic/bob.png',
-        attributes: {
-          gender: 'male',
-          hairColor: 'brown',
-          age: 34,
-          location: 'suburbs'
-        }
-      },
-      {
-        id: 'charlie',
-        name: 'Charlie',
-        image: '/images/characters/classic/charlie.png',
-        attributes: {
-          gender: 'male',
-          hairColor: 'black',
-          age: 67,
-          location: 'countryside'
-        }
-      },
-      {
-        id: 'diana',
-        name: 'Diana',
-        image: '/images/characters/classic/diana.png',
-        attributes: {
-          gender: 'female',
-          hairColor: 'red',
-          age: 26,
-          location: 'city'
-        }
-      },
-      {
-        id: 'eve',
-        name: 'Eve',
-        image: '/images/characters/classic/eve.png',
-        attributes: {
-          gender: 'female',
-          hairColor: 'black',
-          age: 42,
-          location: 'city'
-        }
-      },
-      {
-        id: 'frank',
-        name: 'Frank',
-        image: '/images/characters/classic/frank.png',
-        attributes: {
-          gender: 'male',
-          hairColor: 'grey',
-          age: 58,
-          location: 'city'
-        }
-      },
-      {
-        id: 'grace',
-        name: 'Grace',
-        image: '/images/characters/classic/grace.png',
-        attributes: {
-          gender: 'female',
-          hairColor: 'brown',
-          age: 31,
-          location: 'city'
-        }
-      },
-      {
-        id: 'henry',
-        name: 'Henry',
-        image: '/images/characters/classic/henry.png',
-        attributes: {
-          gender: 'male',
-          hairColor: 'blonde',
-          age: 39,
-          location: 'suburbs'
-        }
-      }
+      createCharacter('alice', 'Alice', 'female', 'blonde', 28, 'city'),
+      createCharacter('bob', 'Bob', 'male', 'brown', 34, 'suburbs'),
+      createCharacter('charlie', 'Charlie', 'male', 'black', 67, 'countryside'),
+      createCharacter('diana', 'Diana', 'female', 'red', 26, 'city'),
+      createCharacter('eve', 'Eve', 'female', 'black', 42, 'city'),
+      createCharacter('frank', 'Frank', 'male', 'grey', 58, 'city'),
+      createCharacter('grace', 'Grace', 'female', 'brown', 31, 'city'),
+      createCharacter('henry', 'Henry', 'male', 'blonde', 39, 'suburbs'),
+      createCharacter('irene', 'Irene', 'female', 'black', 55, 'suburbs'),
+      createCharacter('jack', 'Jack', 'male', 'brown', 22, 'city'),
+      createCharacter('kate', 'Kate', 'female', 'blonde', 33, 'countryside'),
+      createCharacter('leo', 'Leo', 'male', 'black', 45, 'city'),
+      createCharacter('mona', 'Mona', 'female', 'red', 29, 'suburbs'),
+      createCharacter('nathan', 'Nathan', 'male', 'blonde', 50, 'countryside'),
+      createCharacter('olivia', 'Olivia', 'female', 'brown', 25, 'city'),
+      createCharacter('peter', 'Peter', 'male', 'grey', 70, 'suburbs'),
+      createCharacter('quinn', 'Quinn', 'female', 'black', 30, 'city'),
+      createCharacter('robert', 'Robert', 'male', 'brown', 48, 'countryside'),
+      createCharacter('samantha', 'Samantha', 'female', 'blonde', 40, 'city'),
+      createCharacter('tom', 'Tom', 'male', 'black', 21, 'suburbs'),
+      createCharacter('ursula', 'Ursula', 'female', 'grey', 65, 'countryside'),
+      createCharacter('victor', 'Victor', 'male', 'brown', 37, 'city'),
+      createCharacter('wendy', 'Wendy', 'female', 'red', 44, 'suburbs'),
+      createCharacter('xavier', 'Xavier', 'male', 'black', 29, 'city')
     ]
   }
 };
