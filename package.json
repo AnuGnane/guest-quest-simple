@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node start.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "test-game": "node test-game.js"
   },
   "keywords": ["game", "multiplayer", "guess-who"],
   "author": "",
