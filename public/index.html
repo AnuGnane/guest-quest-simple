@@ -11,11 +11,20 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎮 Guest Quest</h1>
-            <div id="user-display" class="user-display" style="display: none;">
-                Playing as: <strong id="current-username"></strong>
+            <div class="logo">
+                <div class="logo-icon">GQ</div>
+                <h1>Guest Quest</h1>
+            </div>
+            <div class="header-controls">
+                <button id="dark-mode-toggle" class="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+                    🌙
+                </button>
+                <div id="user-display" class="user-display" style="display: none;">
+                    Playing as: <strong id="current-username"></strong>
+                </div>
             </div>
         </div>
+        <div class="container-content">
 
         <!-- Connection Status -->
         <div id="connection-status" class="status">Connecting...</div>
@@ -72,7 +81,7 @@
             <div class="room-header">
                 <h3>Room: <span id="current-room-code"></span></h3>
                 <button id="copy-room-code" onclick="copyRoomCode()" title="Copy room code">📋</button>
-                <button id="leave-room-btn" onclick="leaveRoom()">Leave Room</button>
+                <button id="leave-room-btn" class="danger" onclick="leaveRoom()">Leave Room</button>
             </div>
 
             <div class="room-info">
@@ -87,13 +96,22 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen" style="display: none;">
             <div class="game-info">
-                <div id="your-character">
-                    Your character: <strong id="character-name"></strong>
-                    <span id="turn-timer" class="turn-timer">60s</span>
+                <div class="game-status">
+                    <div id="current-turn">
+                        Current turn: <span id="turn-player"></span>
+                        <span id="turn-timer" class="turn-timer">60s</span>
+                    </div>
                 </div>
-                <div id="character-details"></div>
-                <div id="current-turn">
-                    Current turn: <span id="turn-player"></span>
+                <div class="character-info">
+                    <div class="character-display">
+                        <img id="character-image" class="your-character-image" src="" alt="Your character" style="display: none;">
+                        <div class="character-text">
+                            <div id="your-character">
+                                Your character: <strong id="character-name"></strong>
+                            </div>
+                            <div id="character-details"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -114,7 +132,7 @@
                 <div id="question-section">
                     <input type="text" id="question-input" placeholder="Ask a yes/no question..." maxlength="100">
                     <button id="ask-btn" onclick="askQuestion()">Ask Question</button>
-                    <button id="end-turn-btn" onclick="endTurn()">End Turn</button>
+                    <button id="end-turn-btn" class="warning" onclick="endTurn()">End Turn</button>
                 </div>
 
                 <div class="characters-section">
@@ -251,6 +269,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

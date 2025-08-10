@@ -13,6 +13,12 @@ class GuestQuestGame {
             guessesMade: 0,
             turnCount: 1
         };
+        this.turnState = {
+            questionAsked: false,
+            doubleQuestionActive: false,
+            doubleQuestionUsed: false,
+            questionsAskedCount: 0
+        };
         this.powerUps = {};
         this.availablePowerUps = {};
         this.isMyTurn = false;
@@ -234,6 +240,9 @@ class GuestQuestGame {
                 break;
             case 'turn_timeout':
                 this.handleTurnTimeout(payload);
+                break;
+            case 'timer_sync':
+                this.handleTimerSync(payload);
                 break;
             case 'question_received':
                 this.handleQuestionReceived(payload);
@@ -479,7 +488,7 @@ class GuestQuestGame {
         this.updateTurnControls();
         
         // Start initial timer
-        this.startTurnTimer(60);
+        this.startTurnTimer(payload.timeRemaining || 60);
         
         // Initialize attributes display
         this.updateAttributesDisplay();
@@ -498,6 +507,16 @@ class GuestQuestGame {
         if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
         
         detailsEl.textContent = details.join(' • ');
+        
+        // Display character image
+        const characterImageEl = document.getElementById('character-image');
+        if (character.image) {
+            characterImageEl.src = character.image;
+            characterImageEl.style.display = 'block';
+            characterImageEl.onerror = function() {
+                this.src = '/images/characters/user.png';
+            };
+        }
         
         // Store full character for attributes display
         this.yourCharacterFull = character;
@@ -680,6 +699,18 @@ class GuestQuestGame {
         } else if (result.type === 'category_scan') {
             message += ` Categories revealed!`;
             this.addLogMessage(message);
+        } else if (result.type === 'double_question') {
+            message += ` ${result.message || ''}`;
+            this.addLogMessage(message);
+            
+            // Update turn state for double question
+            if (player === this.playerName) {
+                this.turnState.doubleQuestionUsed = true;
+                this.turnState.doubleQuestionActive = true;
+                this.turnState.questionAsked = false; // Reset so they can ask questions
+                this.turnState.questionsAskedCount = 0; // Reset question count
+                this.updateTurnControls();
+            }
         } else {
             message += ` ${result.message || ''}`;
             this.addLogMessage(message);
@@ -900,8 +931,35 @@ class GuestQuestGame {
             return;
         }
         
+        // Debug logging
+        console.log('Turn state before asking:', this.turnState);
+        
+        // Check if we can ask a question
+        if (this.turnState.doubleQuestionUsed) {
+            // In double question mode - can ask up to 2 questions
+            if (this.turnState.questionsAskedCount >= 2) {
+                alert('You have already asked both questions from your Double Question power-up!');
+                return;
+            }
+        } else {
+            // Normal mode - can only ask 1 question
+            if (this.turnState.questionAsked) {
+                alert('You can only ask one question per turn!');
+                return;
+            }
+        }
+        
+        // Disable controls immediately to prevent multiple clicks
+        this.setQuestionControlsEnabled(false);
+        
         this.send('ask_question', { question });
         questionInput.value = '';
+        
+        // Update turn state - let server handle the actual logic
+        this.turnState.questionsAskedCount++;
+        
+        console.log(`Question sent. Count: ${this.turnState.questionsAskedCount}, Double question used: ${this.turnState.doubleQuestionUsed}`);
+        console.log('Turn state after asking:', this.turnState);
     }
     
     handleQuestionAsked(payload) {
@@ -910,104 +968,6 @@ class GuestQuestGame {
         
         const intelligentIcon = payload.wasIntelligent ? '🧠' : '🎲';
         this.addLogMessage(`${intelligentIcon} ${payload.player} asked: "${payload.question}" - Answer: ${payload.answer}`);
-    }
-    
-    handleTurnChanged(payload) {
-        document.getElementById('turn-player').textContent = payload.currentTurn;
-        
-        this.gameStats.turnCount++;
-        this.updateStats();
-        
-        this.isMyTurn = payload.currentTurn === this.playerName;
-        this.updateTurnControls();
-        
-        // Start turn timer
-        this.startTurnTimer(payload.timeRemaining || 60);
-        
-        // Visual feedback for turn change
-        const turnEl = document.getElementById('current-turn');
-        if (this.isMyTurn) {
-            turnEl.style.background = '#d4edda';
-            turnEl.style.color = '#155724';
-            this.addLogMessage('🎯 It\'s your turn! (60 seconds)');
-        } else {
-            turnEl.style.background = '#f8d7da';
-            turnEl.style.color = '#721c24';
-        }
-    }
-    
-    startTurnTimer(seconds) {
-        // Clear existing timer
-        if (this.turnTimer) {
-            clearInterval(this.turnTimer);
-        }
-        
-        this.timeRemaining = seconds;
-        this.updateTimerDisplay();
-        
-        this.turnTimer = setInterval(() => {
-            this.timeRemaining--;
-            this.updateTimerDisplay();
-            
-            if (this.timeRemaining <= 0) {
-                clearInterval(this.turnTimer);
-                this.turnTimer = null;
-            }
-        }, 1000);
-    }
-    
-    updateTimerDisplay() {
-        const timerEl = document.getElementById('turn-timer');
-        if (timerEl) {
-            timerEl.textContent = `${this.timeRemaining}s`;
-            
-            // Change background color based on time remaining, keep text black
-            if (this.timeRemaining <= 10) {
-                timerEl.style.backgroundColor = '#dc3545';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'bold';
-            } else if (this.timeRemaining <= 30) {
-                timerEl.style.backgroundColor = '#fd7e14';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'bold';
-            } else {
-                timerEl.style.backgroundColor = '#28a745';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'normal';
-            }
-        }
-    }
-    
-    handleTurnChanged(payload) {
-        document.getElementById('turn-player').textContent = payload.currentTurn;
-        
-        this.gameStats.turnCount++;
-        this.updateStats();
-        
-        this.isMyTurn = payload.currentTurn === this.playerName;
-        this.updateTurnControls();
-        
-        // Start turn timer
-        this.startTurnTimer(payload.timeRemaining || 60);
-        
-        // Visual feedback for turn change
-        const turnEl = document.getElementById('current-turn');
-        if (this.isMyTurn) {
-            turnEl.style.background = '#d4edda';
-            turnEl.style.color = '#155724';
-            this.addLogMessage('🎯 It\'s your turn! (60 seconds)');
-        } else {
-            turnEl.style.background = '#f8d7da';
-            turnEl.style.color = '#721c24';
-        }
-    }
-    
-    handleTurnTimeout(payload) {
-        this.addLogMessage(`⏰ ${payload.player}'s turn ended due to timeout`);
-        if (this.turnTimer) {
-            clearInterval(this.turnTimer);
-            this.turnTimer = null;
-        }
     }
     
     handleQuestionReceived(payload) {
@@ -1051,6 +1011,14 @@ class GuestQuestGame {
         // Update stats
         this.gameStats.questionsAsked++;
         this.updateStats();
+        
+        // Re-enable controls for the asking player after answer is received
+        if (payload.askingPlayer === this.playerName) {
+            this.setQuestionControlsEnabled(true);
+            
+            // Don't update turn controls here - let server messages handle state changes
+            // The server will send either 'double_question_used' or 'turn_changed' messages
+        }
     }
     
     hideQuestionModal() {
@@ -1088,61 +1056,189 @@ class GuestQuestGame {
         document.getElementById('answer-input').value = '';
     }
     
+    handleTurnChanged(payload) {
+        document.getElementById('turn-player').textContent = payload.currentTurn;
+        
+        this.gameStats.turnCount++;
+        this.updateStats();
+        
+        this.isMyTurn = payload.currentTurn === this.playerName;
+        
+        // Reset turn state for new turn
+        this.turnState = {
+            questionAsked: false,
+            doubleQuestionActive: false,
+            doubleQuestionUsed: false,
+            questionsAskedCount: 0
+        };
+        
+        // Re-enable controls for new turn
+        this.setQuestionControlsEnabled(true);
+        this.updateTurnControls();
+        
+        // Start turn timer
+        this.startTurnTimer(payload.timeRemaining || 60);
+        
+        // Visual feedback for turn change
+        const turnEl = document.getElementById('current-turn');
+        if (this.isMyTurn) {
+            turnEl.style.background = '#d4edda';
+            turnEl.style.color = '#155724';
+            this.addLogMessage('🎯 It\'s your turn! (60 seconds)');
+        } else {
+            turnEl.style.background = '#f8d7da';
+            turnEl.style.color = '#721c24';
+        }
+    }
+    
+    handleTurnTimeout(payload) {
+        this.addLogMessage(`⏰ ${payload.player}'s turn ended due to timeout`);
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+            this.turnTimer = null;
+        }
+    }
+    
+    handleTimerSync(payload) {
+        // Update timer from server to keep all clients in sync
+        this.timeRemaining = payload.timeRemaining;
+        this.updateTimerDisplay();
+        
+        // Ensure we're showing the correct current turn
+        if (payload.currentTurn) {
+            document.getElementById('turn-player').textContent = payload.currentTurn;
+        }
+    }
+    
     handleDoubleQuestionUsed(payload) {
-        this.addLogMessage(`🎯 ${payload.player} used Double Question power-up - ${payload.message}`);
+        this.addLogMessage(`🎯 ${payload.player} - ${payload.message}`);
+        
+        // Update turn state for double question - this message comes after each question in double question mode
+        if (payload.player === this.playerName) {
+            // Keep double question active so they can ask another question
+            this.turnState.doubleQuestionActive = true;
+            this.turnState.questionAsked = false; // Reset so they can ask another question
+            this.updateTurnControls();
+        }
     }
     
     startTurnTimer(seconds) {
-        // Clear existing timer
+        // Clear existing timer - we'll rely on server sync instead of local countdown
         if (this.turnTimer) {
             clearInterval(this.turnTimer);
+            this.turnTimer = null;
         }
         
         this.timeRemaining = seconds;
+        
+        // Make sure timer element exists
+        const timerEl = document.getElementById('turn-timer');
+        if (!timerEl) {
+            console.error('Timer element not found! Creating fallback timer display.');
+            // Try to find the turn display element and add timer there
+            const turnEl = document.getElementById('current-turn');
+            if (turnEl) {
+                const existingTimer = turnEl.querySelector('.timer-display');
+                if (existingTimer) {
+                    existingTimer.remove();
+                }
+                const timerSpan = document.createElement('span');
+                timerSpan.id = 'turn-timer';
+                timerSpan.className = 'timer-display';
+                timerSpan.style.marginLeft = '10px';
+                timerSpan.style.padding = '2px 8px';
+                timerSpan.style.borderRadius = '4px';
+                timerSpan.style.fontSize = '14px';
+                timerSpan.style.fontWeight = 'bold';
+                turnEl.appendChild(timerSpan);
+            } else {
+                console.error('Could not find turn element either!');
+                return;
+            }
+        }
+        
+        // Initial display update
         this.updateTimerDisplay();
         
-        this.turnTimer = setInterval(() => {
-            this.timeRemaining--;
-            this.updateTimerDisplay();
-            
-            if (this.timeRemaining <= 0) {
-                clearInterval(this.turnTimer);
-                this.turnTimer = null;
-            }
-        }, 1000);
+        console.log(`Timer initialized: ${seconds} seconds - relying on server sync`);
     }
     
     updateTimerDisplay() {
         const timerEl = document.getElementById('turn-timer');
-        if (timerEl) {
-            timerEl.textContent = `${this.timeRemaining}s`;
+        if (timerEl && this.timeRemaining >= 0) {
+            timerEl.textContent = `[${this.timeRemaining}s]`;
             
-            // Change background color based on time remaining, keep text black
+            // Ensure the timer is visible with proper styling
+            timerEl.style.display = 'inline-block';
+            timerEl.style.padding = '4px 8px';
+            timerEl.style.borderRadius = '4px';
+            timerEl.style.marginLeft = '10px';
+            timerEl.style.fontSize = '14px';
+            timerEl.style.fontWeight = 'bold';
+            timerEl.style.border = '1px solid #ccc';
+            
+            // Change background color based on time remaining
             if (this.timeRemaining <= 10) {
                 timerEl.style.backgroundColor = '#dc3545';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'bold';
+                timerEl.style.color = 'white';
+                timerEl.style.borderColor = '#dc3545';
             } else if (this.timeRemaining <= 30) {
                 timerEl.style.backgroundColor = '#fd7e14';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'bold';
+                timerEl.style.color = 'white';
+                timerEl.style.borderColor = '#fd7e14';
             } else {
                 timerEl.style.backgroundColor = '#28a745';
-                timerEl.style.color = 'black';
-                timerEl.style.fontWeight = 'normal';
+                timerEl.style.color = 'white';
+                timerEl.style.borderColor = '#28a745';
             }
+            
+            console.log(`Timer updated: ${this.timeRemaining}s - Element visible:`, timerEl.offsetWidth > 0);
+        } else {
+            console.error('Timer element not found or invalid time remaining:', this.timeRemaining);
         }
+    }
+
+    
+    setQuestionControlsEnabled(enabled) {
+        const questionInput = document.getElementById('question-input');
+        const askBtn = document.getElementById('ask-btn');
+        const endTurnBtn = document.getElementById('end-turn-btn');
+        
+        if (questionInput) questionInput.disabled = !enabled;
+        if (askBtn) askBtn.disabled = !enabled;
+        if (endTurnBtn) endTurnBtn.disabled = !enabled;
     }
     
     updateTurnControls() {
         // Update all turn-based controls
-        document.getElementById('question-input').disabled = !this.isMyTurn;
-        document.getElementById('ask-btn').disabled = !this.isMyTurn;
+        let canAskQuestion = false;
+        
+        if (this.isMyTurn) {
+            if (this.turnState.doubleQuestionUsed) {
+                // In double question mode - can ask if haven't asked 2 questions yet
+                canAskQuestion = this.turnState.questionsAskedCount < 2;
+            } else {
+                // Normal mode - can ask if haven't asked any question yet
+                canAskQuestion = !this.turnState.questionAsked;
+            }
+        }
+        
+        const canGuess = this.isMyTurn && !this.turnState.doubleQuestionUsed; // No guessing during double question turn
+        
+        console.log('Turn controls update:', {
+            isMyTurn: this.isMyTurn,
+            canAskQuestion,
+            canGuess,
+            turnState: this.turnState
+        });
+        
+        document.getElementById('question-input').disabled = !canAskQuestion;
+        document.getElementById('ask-btn').disabled = !canAskQuestion;
         document.getElementById('end-turn-btn').disabled = !this.isMyTurn;
         
         const characterBtns = document.querySelectorAll('.unified-character');
         characterBtns.forEach(btn => {
-            if (!this.isMyTurn) {
+            if (!canGuess) {
                 btn.classList.add('disabled');
                 btn.style.pointerEvents = 'none';
             } else {
@@ -1389,7 +1485,34 @@ function toggleHelp() {
     }
 }
 
+// Dark Mode Toggle
+function toggleDarkMode() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Update button icon
+    const toggleBtn = document.getElementById('dark-mode-toggle');
+    toggleBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    
+    // Save preference to localStorage
+    localStorage.setItem('theme', newTheme);
+}
+
+// Initialize theme on page load
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    const toggleBtn = document.getElementById('dark-mode-toggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
 // Initialize game when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    initializeTheme();
     game = new GuestQuestGame();
 });

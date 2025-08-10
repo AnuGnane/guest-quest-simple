@@ -376,13 +376,25 @@ function askQuestion(ws, payload) {
     return;
   }
   
-  // Check if question already asked this turn (unless double question power-up was used)
-  if (room.turnActions.questionAsked && !room.turnActions.doubleQuestionActive) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      payload: { message: 'You can only ask one question per turn!' }
-    }));
-    return;
+  // Check if question already asked this turn
+  if (room.turnActions.doubleQuestionUsed) {
+    // In double question mode - can ask up to 2 questions
+    if (room.turnActions.questionsAskedCount >= 2) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        payload: { message: 'You have already asked both questions from your Double Question power-up!' }
+      }));
+      return;
+    }
+  } else {
+    // Normal mode - can only ask 1 question
+    if (room.turnActions.questionAsked) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        payload: { message: 'You can only ask one question per turn!' }
+      }));
+      return;
+    }
   }
 
   const { question } = payload;
@@ -661,13 +673,20 @@ function answerQuestion(ws, payload) {
     return;
   }
   
+  // Store question info before clearing
+  const questionInfo = {
+    askingPlayer: room.pendingQuestion.askingPlayer,
+    targetPlayer: room.pendingQuestion.targetPlayer,
+    question: room.pendingQuestion.question
+  };
+  
   // Broadcast the question and answer to all players
   broadcastToRoom(playerInfo.roomCode, {
     type: 'question_answered',
     payload: {
-      askingPlayer: room.pendingQuestion.askingPlayer,
-      targetPlayer: room.pendingQuestion.targetPlayer,
-      question: room.pendingQuestion.question,
+      askingPlayer: questionInfo.askingPlayer,
+      targetPlayer: questionInfo.targetPlayer,
+      question: questionInfo.question,
       answer: answer
     }
   });
@@ -680,25 +699,28 @@ function answerQuestion(ws, payload) {
   
   if (room.turnActions.doubleQuestionUsed) {
     // Double question turn
-    if (room.turnActions.questionsAskedCount === 1) {
-      // First question of double question - don't end turn yet
-      room.turnActions.questionAsked = true;
-      room.turnActions.doubleQuestionActive = false; // First question used up
+    if (room.turnActions.questionsAskedCount < 2) {
+      // First question of double question - don't end turn yet, allow another question
+      room.turnActions.questionAsked = false; // Reset so they can ask another question
+      room.turnActions.doubleQuestionActive = true; // Keep active for second question
       
       // Notify that they can ask one more question
       broadcastToRoom(playerInfo.roomCode, {
         type: 'double_question_used',
         payload: {
-          player: room.pendingQuestion.askingPlayer,
-          message: 'You can ask one more question this turn! (No guessing allowed)'
+          player: questionInfo.askingPlayer,
+          message: `Question ${room.turnActions.questionsAskedCount} of 2 answered. You can ask one more question! (No guessing allowed)`
         }
       });
     } else {
       // Second question of double - end turn
+      room.turnActions.questionAsked = true;
+      room.turnActions.doubleQuestionActive = false;
       endTurn(room);
     }
   } else {
-    // Normal single question - end turn
+    // Normal single question - mark as asked and end turn
+    room.turnActions.questionAsked = true;
     endTurn(room);
   }
 }
@@ -725,10 +747,14 @@ function handleEndTurn(ws, payload) {
 }
 
 function endTurn(room) {
-  // Clear existing timer
+  // Clear existing timer and timer sync interval
   if (room.turnTimer) {
     clearTimeout(room.turnTimer);
     room.turnTimer = null;
+  }
+  if (room.timerSyncInterval) {
+    clearInterval(room.timerSyncInterval);
+    room.timerSyncInterval = null;
   }
   
   // Reset turn actions
@@ -748,6 +774,10 @@ function endTurn(room) {
   // Move to next turn
   room.currentTurn = (room.currentTurn + 1) % room.players.length;
   
+  // Initialize timer state
+  room.timeRemaining = 60;
+  room.turnStartTime = Date.now();
+  
   // Start timer for new turn (60 seconds)
   room.turnTimer = setTimeout(() => {
     console.log(`Turn timer expired for room ${room.code}`);
@@ -764,6 +794,27 @@ function endTurn(room) {
       endTurn(room);
     }
   }, 60000); // 60 seconds
+  
+  // Start timer sync interval - broadcast time remaining every second
+  room.timerSyncInterval = setInterval(() => {
+    if (room.players && room.players[room.currentTurn]) {
+      const elapsed = Math.floor((Date.now() - room.turnStartTime) / 1000);
+      room.timeRemaining = Math.max(0, 60 - elapsed);
+      
+      broadcastToRoom(room.code, {
+        type: 'timer_sync',
+        payload: { 
+          timeRemaining: room.timeRemaining,
+          currentTurn: room.players[room.currentTurn].name
+        }
+      });
+      
+      if (room.timeRemaining <= 0) {
+        clearInterval(room.timerSyncInterval);
+        room.timerSyncInterval = null;
+      }
+    }
+  }, 1000);
   
   broadcastToRoom(room.code, {
     type: 'turn_changed',
