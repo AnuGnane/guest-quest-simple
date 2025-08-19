@@ -545,13 +545,31 @@ function usePowerUp(ws, payload) {
 
   switch (powerUpType) {
     case 'reveal_attribute':
-      const attributes = Object.keys(targetPlayer.character).filter(key => key !== 'name');
-      const randomAttr = attributes[Math.floor(Math.random() * attributes.length)];
-      result = {
-        type: 'reveal_attribute',
-        attribute: randomAttr,
-        value: targetPlayer.character[randomAttr]
-      };
+      // Only reveal gameplay attributes, not metadata like image, id, name
+      const gameplayAttributes = targetPlayer.character.attributes ? 
+        Object.keys(targetPlayer.character.attributes) : 
+        Object.keys(targetPlayer.character).filter(key => 
+          !['name', 'image', 'id', 'attributes'].includes(key)
+        );
+      
+      if (gameplayAttributes.length === 0) {
+        result = {
+          type: 'reveal_attribute',
+          attribute: 'error',
+          value: 'No attributes available to reveal'
+        };
+      } else {
+        const randomAttr = gameplayAttributes[Math.floor(Math.random() * gameplayAttributes.length)];
+        const attributeValue = targetPlayer.character.attributes ? 
+          targetPlayer.character.attributes[randomAttr] : 
+          targetPlayer.character[randomAttr];
+        
+        result = {
+          type: 'reveal_attribute',
+          attribute: randomAttr,
+          value: attributeValue
+        };
+      }
       break;
 
     case 'elimination_hint':

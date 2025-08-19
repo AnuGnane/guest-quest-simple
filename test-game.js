@@ -155,6 +155,25 @@ class GameTestClient {
                         this.turnState.doubleQuestionUsed = true;
                         this.turnState.doubleQuestionActive = true;
                     }
+                } else if (payload.result.type === 'reveal_attribute') {
+                    const { attribute, value } = payload.result;
+                    this.log(`🔍 Revealed: ${attribute} = ${value}`);
+                    
+                    // Check if forbidden attributes are revealed
+                    const forbiddenAttributes = ['image', 'id', 'name', 'attributes'];
+                    if (forbiddenAttributes.includes(attribute)) {
+                        this.testResults.push({ 
+                            test: 'Reveal Attribute Security', 
+                            status: 'FAIL', 
+                            details: `Revealed forbidden attribute: ${attribute}` 
+                        });
+                    } else {
+                        this.testResults.push({ 
+                            test: 'Reveal Attribute Power-up', 
+                            status: 'PASS', 
+                            details: `Revealed valid attribute: ${attribute} = ${value}` 
+                        });
+                    }
                 }
                 break;
 
