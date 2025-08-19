@@ -138,6 +138,12 @@ function handleMessage(ws, data) {
     case 'leave_room':
       leaveRoom(ws, payload);
       break;
+    case 'back_to_lobby':
+      backToLobby(ws, payload);
+      break;
+    case 'change_character_set':
+      changeCharacterSet(ws, payload);
+      break;
     default:
       console.log('Unknown message type:', type);
   }
@@ -300,6 +306,48 @@ function startGame(ws, payload) {
     questionsAskedCount: 0
   };
 
+  // Initialize timer state for first turn
+  room.timeRemaining = 60;
+  room.turnStartTime = Date.now();
+  
+  // Start timer for first turn (60 seconds)
+  room.turnTimer = setTimeout(() => {
+    console.log(`Turn timer expired for room ${room.code}`);
+    
+    // Check if room and players still exist
+    if (room.players && room.players[room.currentTurn]) {
+      broadcastToRoom(room.code, {
+        type: 'turn_timeout',
+        payload: { 
+          player: room.players[room.currentTurn].name,
+          message: 'Turn ended due to timeout'
+        }
+      });
+      endTurn(room);
+    }
+  }, 60000); // 60 seconds
+  
+  // Start timer sync interval - broadcast time remaining every second
+  room.timerSyncInterval = setInterval(() => {
+    if (room.players && room.players[room.currentTurn]) {
+      const elapsed = Math.floor((Date.now() - room.turnStartTime) / 1000);
+      room.timeRemaining = Math.max(0, 60 - elapsed);
+      
+      broadcastToRoom(room.code, {
+        type: 'timer_sync',
+        payload: { 
+          timeRemaining: room.timeRemaining,
+          currentTurn: room.players[room.currentTurn].name
+        }
+      });
+      
+      if (room.timeRemaining <= 0) {
+        clearInterval(room.timerSyncInterval);
+        room.timerSyncInterval = null;
+      }
+    }
+  }, 1000);
+
   // Send game start to all players
   room.players.forEach(player => {
     player.ws.send(JSON.stringify({
@@ -311,7 +359,8 @@ function startGame(ws, payload) {
         allCharacters: room.characters,
         characterSet: room.characterSet,
         powerUps: player.powerUps,
-        availablePowerUps: powerUps
+        availablePowerUps: powerUps,
+        timeRemaining: 60
       }
     }));
   });
@@ -874,6 +923,94 @@ function handleDisconnect(ws) {
   }
 
   gameState.players.delete(ws);
+}
+
+function backToLobby(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room) return;
+
+  console.log(`🏠 Player ${playerInfo.playerId} going back to lobby in room ${room.code}`);
+
+  // Reset game state
+  room.gameStarted = false;
+  room.currentTurn = 0;
+  
+  // Clear timers
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = null;
+  }
+  if (room.timerSyncInterval) {
+    clearInterval(room.timerSyncInterval);
+    room.timerSyncInterval = null;
+  }
+
+  // Reset all players to not ready
+  room.players.forEach(player => {
+    player.ready = false;
+    player.powerUpCooldown = false;
+  });
+
+  // Broadcast room update
+  broadcastToRoom(playerInfo.roomCode, {
+    type: 'room_updated',
+    payload: {
+      players: room.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        ready: p.ready
+      })),
+      canStart: false
+    }
+  });
+}
+
+function changeCharacterSet(ws, payload) {
+  const playerInfo = gameState.players.get(ws);
+  if (!playerInfo) return;
+
+  const room = gameState.rooms.get(playerInfo.roomCode);
+  if (!room) return;
+
+  const { characterSet } = payload;
+  
+  // Only allow room creator to change character set
+  const player = room.players.find(p => p.ws === ws);
+  if (!player || room.players[0] !== player) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Only the room creator can change the character set' }
+    }));
+    return;
+  }
+
+  // Validate character set exists
+  const characterSets = getCharacterSets();
+  if (!characterSets[characterSet]) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      payload: { message: 'Invalid character set' }
+    }));
+    return;
+  }
+
+  console.log(`🎮 Changing character set in room ${room.code} to ${characterSet}`);
+
+  // Update room character set
+  room.characterSet = characterSet;
+  room.characters = [...characterSets[characterSet]];
+
+  // Notify all players about character set change
+  broadcastToRoom(playerInfo.roomCode, {
+    type: 'character_set_changed',
+    payload: {
+      characterSet: characterSet,
+      characterSetName: getCharacterDatabase()[characterSet]?.setName || characterSet
+    }
+  });
 }
 
 const PORT = process.env.PORT || 3000;

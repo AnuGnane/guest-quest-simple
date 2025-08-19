@@ -28,6 +28,8 @@ class GuestQuestGame {
         this.turnTimer = null;
         this.timeRemaining = 0;
         this.currentQuestionId = null;
+        this.isRoomCreator = false;
+        this.currentCharacterSet = 'classic';
         
         this.init();
     }
@@ -304,6 +306,9 @@ class GuestQuestGame {
             case 'game_ended':
                 this.handleGameEnded(payload);
                 break;
+            case 'character_set_changed':
+                this.handleCharacterSetChanged(payload);
+                break;
             case 'error':
                 this.handleError(payload);
                 break;
@@ -332,6 +337,7 @@ class GuestQuestGame {
     
     handleRoomCreated(payload) {
         this.roomCode = payload.roomCode;
+        this.isRoomCreator = true; // Mark as room creator
         document.getElementById('current-room-code').textContent = this.roomCode;
         
         // Auto-join the created room
@@ -461,6 +467,52 @@ class GuestQuestGame {
             startBtn.style.display = 'block';
         } else {
             startBtn.style.display = 'none';
+        }
+        
+        // Show character set selection for room creator
+        this.updateCharacterSetSelection();
+    }
+    
+    updateCharacterSetSelection() {
+        const characterSetSection = document.getElementById('lobby-character-set-selection');
+        
+        if (this.isRoomCreator && this.fullCharacterData) {
+            characterSetSection.style.display = 'block';
+            
+            // Populate lobby character set dropdown
+            const dropdown = document.getElementById('lobby-character-set-select');
+            dropdown.innerHTML = '';
+            
+            Object.keys(this.fullCharacterData).forEach(setId => {
+                const characterSet = this.fullCharacterData[setId];
+                const option = document.createElement('option');
+                option.value = setId;
+                option.textContent = characterSet.setName;
+                dropdown.appendChild(option);
+            });
+            
+            // Set current selection
+            dropdown.value = this.currentCharacterSet;
+            this.updateCharacterSetInfo();
+        } else {
+            characterSetSection.style.display = 'none';
+        }
+    }
+    
+    updateCharacterSetInfo() {
+        const infoEl = document.getElementById('character-set-info');
+        const dropdown = document.getElementById('lobby-character-set-select');
+        const selectedSet = dropdown.value;
+        
+        if (selectedSet && this.fullCharacterData[selectedSet]) {
+            const characterSet = this.fullCharacterData[selectedSet];
+            infoEl.innerHTML = `
+                <p><strong>${characterSet.setName}</strong></p>
+                <p>${characterSet.description}</p>
+                <p>Characters: ${characterSet.characters.length}</p>
+            `;
+        } else {
+            infoEl.innerHTML = '<p>Select a character set to see details</p>';
         }
     }
     
@@ -1387,6 +1439,15 @@ class GuestQuestGame {
     }
     
     handleGameOver(payload) {
+        // Close all open modals to prevent blocking the game over screen
+        this.closeAllModals();
+        
+        // Clear any active timers
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+            this.turnTimer = null;
+        }
+        
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('game-over-screen').style.display = 'block';
         
@@ -1398,6 +1459,30 @@ class GuestQuestGame {
             resultEl.textContent = `😔 ${payload.winner} Won! The character was ${payload.character}`;
             resultEl.style.color = '#dc3545';
         }
+    }
+    
+    closeAllModals() {
+        // Close all possible modals that could be open
+        const modals = [
+            'question-modal',
+            'elimination-hint-modal', 
+            'reveal-attribute-modal'
+        ];
+        
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Hide floating button too
+        const floatingBtn = document.getElementById('floating-question-btn');
+        if (floatingBtn) {
+            floatingBtn.style.display = 'none';
+        }
+        
+        console.log('🔒 All modals closed for game end');
     }
     
     addLogMessage(message) {
@@ -1413,6 +1498,118 @@ class GuestQuestGame {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({ type, payload }));
         }
+    }
+    
+    // Game over screen actions
+    backToLobby() {
+        console.log('🏠 Going back to lobby');
+        // Reset game state but stay in room
+        this.gameStarted = false;
+        this.isMyTurn = false;
+        this.characters = [];
+        this.eliminatedCharacters.clear();
+        this.eliminationHistory = [];
+        this.eliminationRedoStack = [];
+        
+        // Clear timers
+        if (this.turnTimer) {
+            clearInterval(this.turnTimer);
+            this.turnTimer = null;
+        }
+        
+        // Show lobby screen
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.getElementById('lobby-screen').style.display = 'block';
+        
+        // Update character set selection
+        this.updateCharacterSetSelection();
+        
+        // Reset ready state
+        this.isReady = false;
+        const readyBtn = document.getElementById('ready-btn');
+        readyBtn.textContent = 'Ready';
+        readyBtn.className = '';
+        
+        // Notify server
+        this.send('back_to_lobby', {});
+    }
+    
+    startNewGame() {
+        console.log('🆕 Starting completely new game');
+        // Leave current room and go to start screen
+        this.send('leave_room', {});
+        
+        // Reset all state
+        this.inRoom = false;
+        this.isReady = false;
+        this.gameStarted = false;
+        this.roomCode = '';
+        this.isRoomCreator = false;
+        
+        // Show room selection screen
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.getElementById('lobby-screen').style.display = 'none';
+        document.getElementById('room-selection-screen').style.display = 'block';
+        
+        // Re-enable room selection
+        this.setRoomSelectionEnabled(true);
+        
+        // Clear room code input
+        document.getElementById('room-code').value = '';
+    }
+    
+    changeCharacterSet() {
+        const dropdown = document.getElementById('lobby-character-set-select');
+        const selectedSet = dropdown.value;
+        
+        if (selectedSet && selectedSet !== this.currentCharacterSet) {
+            console.log(`🎮 Changing character set to: ${selectedSet}`);
+            this.currentCharacterSet = selectedSet;
+            this.updateCharacterSetInfo();
+            
+            // Notify server about character set change
+            this.send('change_character_set', { 
+                characterSet: selectedSet 
+            });
+        }
+    }
+    
+    handleCharacterSetChanged(payload) {
+        console.log(`🎮 Character set changed to: ${payload.characterSetName}`);
+        this.currentCharacterSet = payload.characterSet;
+        
+        // Update dropdown if visible
+        const dropdown = document.getElementById('lobby-character-set-select');
+        if (dropdown) {
+            dropdown.value = payload.characterSet;
+            this.updateCharacterSetInfo();
+        }
+        
+        // Show notification to all players
+        this.addLogMessage(`🎮 Character set changed to: ${payload.characterSetName}`);
+        
+        // Show temporary notification
+        const notification = document.createElement('div');
+        notification.className = 'character-set-notification';
+        notification.textContent = `Character set changed to: ${payload.characterSetName}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            font-weight: bold;
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
     }
 }
 
@@ -1595,6 +1792,25 @@ function initializeTheme() {
     const toggleBtn = document.getElementById('dark-mode-toggle');
     if (toggleBtn) {
         toggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+// Game over screen functions
+function backToLobby() {
+    if (game) {
+        game.backToLobby();
+    }
+}
+
+function startNewGame() {
+    if (game) {
+        game.startNewGame();
+    }
+}
+
+function changeCharacterSet() {
+    if (game) {
+        game.changeCharacterSet();
     }
 }
 

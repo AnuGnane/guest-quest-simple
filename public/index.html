@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Quest - Simple</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="game-over-styles.css">
 </head>
 
 <body>
@@ -86,6 +87,21 @@
 
             <div class="room-info">
                 <div id="players-list"></div>
+                
+                <!-- Character Set Selection (only visible to room creator) -->
+                <div id="lobby-character-set-selection" class="character-set-section" style="display: none;">
+                    <h4>🎮 Character Set Selection</h4>
+                    <div class="form-group">
+                        <label for="lobby-character-set-select">Choose Character Set:</label>
+                        <select id="lobby-character-set-select" onchange="changeCharacterSet()">
+                            <option value="">Loading character sets...</option>
+                        </select>
+                    </div>
+                    <div id="character-set-info" class="character-set-info">
+                        <p>Select a character set to see details</p>
+                    </div>
+                </div>
+                
                 <div class="room-controls">
                     <button id="ready-btn" onclick="toggleReady()" style="display: none;">Ready</button>
                     <button id="start-game-btn" onclick="startGame()" style="display: none;">Start Game</button>
@@ -191,7 +207,17 @@
         <!-- Game Over Screen -->
         <div id="game-over-screen" class="screen" style="display: none;">
             <h2 id="game-result"></h2>
-            <button onclick="location.reload()">Play Again</button>
+            <div class="game-over-options">
+                <h3>What would you like to do next?</h3>
+                <div class="game-over-buttons">
+                    <button id="back-to-lobby-btn" onclick="backToLobby()" class="primary-btn">
+                        🏠 Back to Lobby (Change Characters)
+                    </button>
+                    <button id="new-game-btn" onclick="startNewGame()" class="secondary-btn">
+                        🆕 Start New Game
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Question Modal -->
