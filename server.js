@@ -2,27 +2,28 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const CharacterLoader = require('./utils/characterLoader');
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+// Initialize character loader
+const characterLoader = new CharacterLoader();
+characterLoader.loadCharacterSets();
 
 // Serve static files
 app.use(express.static('public'));
 
 // API endpoint for character sets (names only)
 app.get('/api/character-sets', (req, res) => {
-  const sets = {};
-  Object.keys(characterSets).forEach(key => {
-    sets[key] = characterSets[key].map(char => char.name);
-  });
-  res.json(sets);
+  res.json(characterLoader.getAvailableSetNames());
 });
 
 // API endpoint for full character data
 app.get('/api/characters/:setName', (req, res) => {
   const setName = req.params.setName;
-  const characterSet = characterDatabase[setName];
+  const characterSet = characterLoader.getCharacterSet(setName);
   
   if (!characterSet) {
     return res.status(404).json({ error: 'Character set not found' });
@@ -33,7 +34,17 @@ app.get('/api/characters/:setName', (req, res) => {
 
 // API endpoint for all character data
 app.get('/api/characters', (req, res) => {
-  res.json(characterDatabase);
+  res.json(characterLoader.getCharacterDatabase());
+});
+
+// API endpoint to reload character sets (useful for development)
+app.post('/api/characters/reload', (req, res) => {
+  try {
+    characterLoader.reload();
+    res.json({ success: true, message: 'Character sets reloaded' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Power-ups available in the game
@@ -64,66 +75,14 @@ const gameState = {
   players: new Map()
 };
 
-// Helper function to create character objects with consistent structure
-function createCharacter(id, name, gender, hairColor, age, location) {
-  return {
-    id: id,
-    name: name,
-    image: `/images/characters/classic/${id}.png`,
-    attributes: {
-      gender: gender,
-      hairColor: hairColor,
-      age: age,
-      location: location
-    }
-  };
+// Get character data from loader
+function getCharacterSets() {
+  return characterLoader.getCharacterSets();
 }
 
-// Enhanced character database with organized structure
-// Characters are sorted alphabetically by name for consistent game board ordering
-const characterDatabase = {
-  classic: {
-    setName: 'Classic Characters',
-    description: 'Traditional character set with diverse occupations and personalities',
-    characters: [
-      createCharacter('alice', 'Alice', 'female', 'blonde', 28, 'city'),
-      createCharacter('bob', 'Bob', 'male', 'brown', 34, 'suburbs'),
-      createCharacter('charlie', 'Charlie', 'male', 'black', 67, 'countryside'),
-      createCharacter('diana', 'Diana', 'female', 'red', 26, 'city'),
-      createCharacter('eve', 'Eve', 'female', 'black', 42, 'city'),
-      createCharacter('frank', 'Frank', 'male', 'grey', 58, 'city'),
-      createCharacter('grace', 'Grace', 'female', 'brown', 31, 'city'),
-      createCharacter('henry', 'Henry', 'male', 'blonde', 39, 'suburbs'),
-      createCharacter('irene', 'Irene', 'female', 'black', 55, 'suburbs'),
-      createCharacter('jack', 'Jack', 'male', 'brown', 22, 'city'),
-      createCharacter('kate', 'Kate', 'female', 'blonde', 33, 'countryside'),
-      createCharacter('leo', 'Leo', 'male', 'black', 45, 'city'),
-      createCharacter('mona', 'Mona', 'female', 'red', 29, 'suburbs'),
-      createCharacter('nathan', 'Nathan', 'male', 'blonde', 50, 'countryside'),
-      createCharacter('olivia', 'Olivia', 'female', 'brown', 25, 'city'),
-      createCharacter('peter', 'Peter', 'male', 'grey', 70, 'suburbs'),
-      createCharacter('quinn', 'Quinn', 'female', 'black', 30, 'city'),
-      createCharacter('robert', 'Robert', 'male', 'brown', 48, 'countryside'),
-      createCharacter('samantha', 'Samantha', 'female', 'blonde', 40, 'city'),
-      createCharacter('tom', 'Tom', 'male', 'black', 21, 'suburbs'),
-      createCharacter('ursula', 'Ursula', 'female', 'grey', 65, 'countryside'),
-      createCharacter('victor', 'Victor', 'male', 'brown', 37, 'city'),
-      createCharacter('wendy', 'Wendy', 'female', 'red', 44, 'suburbs'),
-      createCharacter('xavier', 'Xavier', 'male', 'black', 29, 'city')
-    ]
-  }
-};
-
-// Convert database to legacy format for compatibility
-const characterSets = {};
-Object.keys(characterDatabase).forEach(setKey => {
-  characterSets[setKey] = characterDatabase[setKey].characters.map(char => ({
-    ...char.attributes,
-    name: char.name,
-    image: char.image,
-    id: char.id
-  }));
-});
+function getCharacterDatabase() {
+  return characterLoader.getCharacterDatabase();
+}
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
@@ -194,7 +153,7 @@ function createRoom(ws, payload) {
     gameStarted: false,
     currentTurn: 0,
     characterSet: characterSet,
-    characters: [...characterSets[characterSet] || characterSets.classic],
+    characters: [...getCharacterSets()[characterSet] || getCharacterSets().classic],
     turnActions: {
       questionAsked: false,
       powerUpUsed: false,
@@ -208,7 +167,7 @@ function createRoom(ws, payload) {
     type: 'room_created',
     payload: {
       roomCode,
-      availableCharacterSets: Object.keys(characterSets)
+      availableCharacterSets: Object.keys(getCharacterSets())
     }
   }));
 }
@@ -633,6 +592,7 @@ function usePowerUp(ws, payload) {
 }
 
 function getCharacterCategories(characterSet) {
+  const characterSets = getCharacterSets();
   const sampleChar = characterSets[characterSet][0];
   const categories = {};
 

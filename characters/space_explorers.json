@@ -1,0 +1,72 @@
+{
+  "setName": "Space Explorers",
+  "description": "Brave astronauts and space travelers from across the galaxy",
+  "characters": [
+    {
+      "id": "captain_kirk",
+      "name": "Captain Kirk",
+      "attributes": {
+        "species": "human",
+        "rank": "captain",
+        "ship": "enterprise",
+        "hasBeard": false,
+        "homeWorld": "earth"
+      }
+    },
+    {
+      "id": "spock",
+      "name": "Spock",
+      "attributes": {
+        "species": "vulcan",
+        "rank": "commander",
+        "ship": "enterprise",
+        "hasBeard": false,
+        "homeWorld": "vulcan"
+      }
+    },
+    {
+      "id": "princess_leia",
+      "name": "Princess Leia",
+      "attributes": {
+        "species": "human",
+        "rank": "princess",
+        "ship": "rebel_cruiser",
+        "hasBeard": false,
+        "homeWorld": "alderaan"
+      }
+    },
+    {
+      "id": "chewbacca",
+      "name": "Chewbacca",
+      "attributes": {
+        "species": "wookiee",
+        "rank": "pilot",
+        "ship": "millennium_falcon",
+        "hasBeard": true,
+        "homeWorld": "kashyyyk"
+      }
+    },
+    {
+      "id": "ripley",
+      "name": "Ellen Ripley",
+      "attributes": {
+        "species": "human",
+        "rank": "warrant_officer",
+        "ship": "nostromo",
+        "hasBeard": false,
+        "homeWorld": "earth"
+      }
+    },
+    {
+      "id": "mal_reynolds",
+      "name": "Malcolm Reynolds",
+      "attributes": {
+        "species": "human",
+        "rank": "captain",
+        "ship": "serenity",
+        "hasBeard": false,
+        "homeWorld": "shadow"
+      }
+    }
+  ]
+}

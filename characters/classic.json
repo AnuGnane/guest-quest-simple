@@ -1,0 +1,246 @@
+{
+  "setName": "Classic Characters",
+  "description": "Traditional character set with diverse occupations and personalities",
+  "characters": [
+    {
+      "id": "alice",
+      "name": "Alice",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "blonde",
+        "age": 28,
+        "location": "city"
+      }
+    },
+    {
+      "id": "bob",
+      "name": "Bob",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "brown",
+        "age": 34,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "charlie",
+      "name": "Charlie",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "black",
+        "age": 67,
+        "location": "countryside"
+      }
+    },
+    {
+      "id": "diana",
+      "name": "Diana",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "red",
+        "age": 26,
+        "location": "city"
+      }
+    },
+    {
+      "id": "eve",
+      "name": "Eve",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "black",
+        "age": 42,
+        "location": "city"
+      }
+    },
+    {
+      "id": "frank",
+      "name": "Frank",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "grey",
+        "age": 58,
+        "location": "city"
+      }
+    },
+    {
+      "id": "grace",
+      "name": "Grace",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "brown",
+        "age": 31,
+        "location": "city"
+      }
+    },
+    {
+      "id": "henry",
+      "name": "Henry",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "blonde",
+        "age": 39,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "irene",
+      "name": "Irene",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "black",
+        "age": 55,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "jack",
+      "name": "Jack",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "brown",
+        "age": 22,
+        "location": "city"
+      }
+    },
+    {
+      "id": "kate",
+      "name": "Kate",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "blonde",
+        "age": 33,
+        "location": "countryside"
+      }
+    },
+    {
+      "id": "leo",
+      "name": "Leo",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "black",
+        "age": 45,
+        "location": "city"
+      }
+    },
+    {
+      "id": "mona",
+      "name": "Mona",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "red",
+        "age": 29,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "nathan",
+      "name": "Nathan",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "blonde",
+        "age": 50,
+        "location": "countryside"
+      }
+    },
+    {
+      "id": "olivia",
+      "name": "Olivia",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "brown",
+        "age": 25,
+        "location": "city"
+      }
+    },
+    {
+      "id": "peter",
+      "name": "Peter",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "grey",
+        "age": 70,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "quinn",
+      "name": "Quinn",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "black",
+        "age": 30,
+        "location": "city"
+      }
+    },
+    {
+      "id": "robert",
+      "name": "Robert",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "brown",
+        "age": 48,
+        "location": "countryside"
+      }
+    },
+    {
+      "id": "samantha",
+      "name": "Samantha",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "blonde",
+        "age": 40,
+        "location": "city"
+      }
+    },
+    {
+      "id": "tom",
+      "name": "Tom",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "black",
+        "age": 21,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "ursula",
+      "name": "Ursula",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "grey",
+        "age": 65,
+        "location": "countryside"
+      }
+    },
+    {
+      "id": "victor",
+      "name": "Victor",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "brown",
+        "age": 37,
+        "location": "city"
+      }
+    },
+    {
+      "id": "wendy",
+      "name": "Wendy",
+      "attributes": {
+        "gender": "female",
+        "hairColor": "red",
+        "age": 44,
+        "location": "suburbs"
+      }
+    },
+    {
+      "id": "xavier",
+      "name": "Xavier",
+      "attributes": {
+        "gender": "male",
+        "hairColor": "black",
+        "age": 29,
+        "location": "city"
+      }
+    }
+  ]
+}

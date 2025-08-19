@@ -1,0 +1,182 @@
+{
+  "setName": "Superheroes",
+  "description": "Iconic superheroes from comics and movies",
+  "characters": [
+    {
+      "id": "batman",
+      "name": "Batman",
+      "attributes": {
+        "gender": "male",
+        "powers": "technology",
+        "team": "justice_league",
+        "hasCape": true,
+        "location": "gotham"
+      }
+    },
+    {
+      "id": "superman",
+      "name": "Superman",
+      "attributes": {
+        "gender": "male",
+        "powers": "flight",
+        "team": "justice_league",
+        "hasCape": true,
+        "location": "metropolis"
+      }
+    },
+    {
+      "id": "wonder_woman",
+      "name": "Wonder Woman",
+      "attributes": {
+        "gender": "female",
+        "powers": "strength",
+        "team": "justice_league",
+        "hasCape": false,
+        "location": "themyscira"
+      }
+    },
+    {
+      "id": "spider_man",
+      "name": "Spider-Man",
+      "attributes": {
+        "gender": "male",
+        "powers": "web_slinging",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "iron_man",
+      "name": "Iron Man",
+      "attributes": {
+        "gender": "male",
+        "powers": "technology",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "captain_america",
+      "name": "Captain America",
+      "attributes": {
+        "gender": "male",
+        "powers": "strength",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "black_widow",
+      "name": "Black Widow",
+      "attributes": {
+        "gender": "female",
+        "powers": "martial_arts",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "hulk",
+      "name": "Hulk",
+      "attributes": {
+        "gender": "male",
+        "powers": "strength",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "flash",
+      "name": "Flash",
+      "attributes": {
+        "gender": "male",
+        "powers": "speed",
+        "team": "justice_league",
+        "hasCape": false,
+        "location": "central_city"
+      }
+    },
+    {
+      "id": "green_lantern",
+      "name": "Green Lantern",
+      "attributes": {
+        "gender": "male",
+        "powers": "energy_constructs",
+        "team": "justice_league",
+        "hasCape": false,
+        "location": "coast_city"
+      }
+    },
+    {
+      "id": "aquaman",
+      "name": "Aquaman",
+      "attributes": {
+        "gender": "male",
+        "powers": "water_control",
+        "team": "justice_league",
+        "hasCape": false,
+        "location": "atlantis"
+      }
+    },
+    {
+      "id": "thor",
+      "name": "Thor",
+      "attributes": {
+        "gender": "male",
+        "powers": "lightning",
+        "team": "avengers",
+        "hasCape": true,
+        "location": "asgard"
+      }
+    },
+    {
+      "id": "captain_marvel",
+      "name": "Captain Marvel",
+      "attributes": {
+        "gender": "female",
+        "powers": "energy_projection",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "space"
+      }
+    },
+    {
+      "id": "hawkeye",
+      "name": "Hawkeye",
+      "attributes": {
+        "gender": "male",
+        "powers": "archery",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "scarlet_witch",
+      "name": "Scarlet Witch",
+      "attributes": {
+        "gender": "female",
+        "powers": "magic",
+        "team": "avengers",
+        "hasCape": false,
+        "location": "new_york"
+      }
+    },
+    {
+      "id": "doctor_strange",
+      "name": "Doctor Strange",
+      "attributes": {
+        "gender": "male",
+        "powers": "magic",
+        "team": "independent",
+        "hasCape": true,
+        "location": "new_york"
+      }
+    }
+  ]
+}

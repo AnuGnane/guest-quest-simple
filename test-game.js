@@ -205,10 +205,10 @@ class GameTestClient {
     }
 
     // Test Actions
-    async createRoom() {
+    async createRoom(characterSet = 'classic') {
         this.send('create_room', { 
             playerName: this.playerName,
-            characterSet: 'classic'
+            characterSet: characterSet
         });
         await this.wait(500);
     }
@@ -334,8 +334,8 @@ async function runGameTest() {
         await player1.connect();
         await player2.connect();
         
-        // Player 1 creates room
-        await player1.createRoom();
+        // Player 1 creates room with superheroes character set
+        await player1.createRoom('superheroes');
         await player1.wait(1000);
         
         // Player 1 joins their own room

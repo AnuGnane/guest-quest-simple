@@ -1,0 +1,182 @@
+{
+  "setName": "Animals",
+  "description": "Cute and diverse animal characters",
+  "characters": [
+    {
+      "id": "lion",
+      "name": "Leo the Lion",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "savanna",
+        "size": "large",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "elephant",
+      "name": "Ella the Elephant",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "savanna",
+        "size": "large",
+        "diet": "herbivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "penguin",
+      "name": "Pete the Penguin",
+      "attributes": {
+        "species": "bird",
+        "habitat": "arctic",
+        "size": "medium",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "eagle",
+      "name": "Eddie the Eagle",
+      "attributes": {
+        "species": "bird",
+        "habitat": "mountains",
+        "size": "medium",
+        "diet": "carnivore",
+        "canFly": true
+      }
+    },
+    {
+      "id": "dolphin",
+      "name": "Dolly the Dolphin",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "ocean",
+        "size": "medium",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "butterfly",
+      "name": "Bella the Butterfly",
+      "attributes": {
+        "species": "insect",
+        "habitat": "forest",
+        "size": "small",
+        "diet": "herbivore",
+        "canFly": true
+      }
+    },
+    {
+      "id": "bear",
+      "name": "Bruno the Bear",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "forest",
+        "size": "large",
+        "diet": "omnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "rabbit",
+      "name": "Ruby the Rabbit",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "meadow",
+        "size": "small",
+        "diet": "herbivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "owl",
+      "name": "Oliver the Owl",
+      "attributes": {
+        "species": "bird",
+        "habitat": "forest",
+        "size": "medium",
+        "diet": "carnivore",
+        "canFly": true
+      }
+    },
+    {
+      "id": "frog",
+      "name": "Freddy the Frog",
+      "attributes": {
+        "species": "amphibian",
+        "habitat": "pond",
+        "size": "small",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "giraffe",
+      "name": "Grace the Giraffe",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "savanna",
+        "size": "large",
+        "diet": "herbivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "shark",
+      "name": "Sam the Shark",
+      "attributes": {
+        "species": "fish",
+        "habitat": "ocean",
+        "size": "large",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "monkey",
+      "name": "Max the Monkey",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "jungle",
+        "size": "medium",
+        "diet": "omnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "parrot",
+      "name": "Polly the Parrot",
+      "attributes": {
+        "species": "bird",
+        "habitat": "jungle",
+        "size": "medium",
+        "diet": "omnivore",
+        "canFly": true
+      }
+    },
+    {
+      "id": "turtle",
+      "name": "Terry the Turtle",
+      "attributes": {
+        "species": "reptile",
+        "habitat": "pond",
+        "size": "medium",
+        "diet": "omnivore",
+        "canFly": false
+      }
+    },
+    {
+      "id": "cat",
+      "name": "Chloe the Cat",
+      "attributes": {
+        "species": "mammal",
+        "habitat": "domestic",
+        "size": "small",
+        "diet": "carnivore",
+        "canFly": false
+      }
+    }
+  ]
+}

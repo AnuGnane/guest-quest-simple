@@ -79,9 +79,36 @@ class GuestQuestGame {
             
             console.log('Character sets loaded:', this.characterSets);
             console.log('Full character data loaded:', this.fullCharacterData);
+            
+            // Populate character set dropdown
+            this.populateCharacterSetDropdown();
         } catch (error) {
             console.error('Failed to load character sets:', error);
         }
+    }
+    
+    populateCharacterSetDropdown() {
+        const dropdown = document.getElementById('character-set-select');
+        if (!dropdown) return;
+        
+        // Clear existing options
+        dropdown.innerHTML = '';
+        
+        // Add options for each character set
+        Object.keys(this.fullCharacterData).forEach(setId => {
+            const characterSet = this.fullCharacterData[setId];
+            const option = document.createElement('option');
+            option.value = setId;
+            option.textContent = characterSet.setName;
+            dropdown.appendChild(option);
+        });
+        
+        // Set default to classic if available
+        if (this.fullCharacterData.classic) {
+            dropdown.value = 'classic';
+        }
+        
+        console.log('Character set dropdown populated with', Object.keys(this.fullCharacterData).length, 'sets');
     }
     
     connect() {
@@ -500,11 +527,23 @@ class GuestQuestGame {
         const detailsEl = document.getElementById('character-details');
         let details = [];
         
-        // Simplified to 4 key attributes
-        if (character.gender) details.push(`Gender: ${character.gender}`);
-        if (character.age) details.push(`Age: ${character.age}`);
-        if (character.location) details.push(`Location: ${character.location}`);
-        if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
+        // Dynamically show all character attributes
+        if (character.attributes) {
+            Object.keys(character.attributes).forEach(key => {
+                const value = character.attributes[key];
+                if (value !== undefined && value !== null && value !== '') {
+                    const displayName = this.formatAttributeName(key);
+                    const displayValue = this.formatAttributeValue(value);
+                    details.push(`${displayName}: ${displayValue}`);
+                }
+            });
+        } else {
+            // Fallback for legacy character format
+            if (character.gender) details.push(`Gender: ${character.gender}`);
+            if (character.age) details.push(`Age: ${character.age}`);
+            if (character.location) details.push(`Location: ${character.location}`);
+            if (character.hairColor) details.push(`Hair: ${character.hairColor}`);
+        }
         
         detailsEl.textContent = details.join(' • ');
         
@@ -520,6 +559,18 @@ class GuestQuestGame {
         
         // Store full character for attributes display
         this.yourCharacterFull = character;
+    }
+    
+    formatAttributeValue(value) {
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+        if (typeof value === 'string') {
+            // Convert snake_case and camelCase to readable format
+            return value.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()
+                       .split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+        return String(value);
     }
     
     updateCharacterBoardAttributes() {
@@ -543,24 +594,22 @@ class GuestQuestGame {
             }
             
             if (showAttributes) {
-                // Add simplified attributes overlay
+                // Add dynamic attributes overlay
                 const attributesOverlay = document.createElement('div');
                 attributesOverlay.className = 'character-attributes-overlay';
                 
                 let attributesHtml = '<div class="character-attributes-content">';
                 
-                // Only show the 4 key attributes
-                if (character.attributes.gender) {
-                    attributesHtml += `<div class="attr-item">Gender: ${character.attributes.gender}</div>`;
-                }
-                if (character.attributes.age) {
-                    attributesHtml += `<div class="attr-item">Age: ${character.attributes.age}</div>`;
-                }
-                if (character.attributes.location) {
-                    attributesHtml += `<div class="attr-item">Location: ${character.attributes.location}</div>`;
-                }
-                if (character.attributes.hairColor) {
-                    attributesHtml += `<div class="attr-item">Hair: ${character.attributes.hairColor}</div>`;
+                // Show all character attributes dynamically
+                if (character.attributes) {
+                    Object.keys(character.attributes).forEach(key => {
+                        const value = character.attributes[key];
+                        if (value !== undefined && value !== null && value !== '') {
+                            const displayName = this.formatAttributeName(key);
+                            const displayValue = this.formatAttributeValue(value);
+                            attributesHtml += `<div class="attr-item">${displayName}: ${displayValue}</div>`;
+                        }
+                    });
                 }
                 
                 attributesHtml += '</div>';
@@ -585,45 +634,83 @@ class GuestQuestGame {
     
     setupQuestionHints() {
         const hintContent = document.getElementById('hint-content');
+        
+        if (!this.fullCharacterData || !this.characterSet || !this.fullCharacterData[this.characterSet]) {
+            hintContent.innerHTML = '<div class="hint-category"><strong>Loading hints...</strong></div>';
+            return;
+        }
+        
+        const characterSet = this.fullCharacterData[this.characterSet];
+        const characters = characterSet.characters;
+        
+        if (!characters || characters.length === 0) {
+            hintContent.innerHTML = '<div class="hint-category"><strong>No characters found</strong></div>';
+            return;
+        }
+        
+        // Analyze attributes from the character set
+        const attributeAnalysis = this.analyzeCharacterAttributes(characters);
+        
         let hints = '';
         
-        if (this.characterSet === 'classic') {
-            hints = `
-                <div class="hint-category">
-                    <strong>Gender:</strong>
-                    <div class="hint-examples">"Is your character male?" "Are they female?"</div>
-                </div>
-                <div class="hint-category">
-                    <strong>Hair Color:</strong>
-                    <div class="hint-examples">"Do they have blonde hair?" "Is their hair brown/black/red/grey?"</div>
-                </div>
-                <div class="hint-category">
-                    <strong>Accessories:</strong>
-                    <div class="hint-examples">"Do they wear glasses?"</div>
-                </div>
-                <div class="hint-category">
-                    <strong>Age:</strong>
-                    <div class="hint-examples">"Are they young?" "Are they old?" "Are they middle-aged?"</div>
-                </div>
-            `;
-        } else if (this.characterSet === 'superheroes') {
-            hints = `
-                <div class="hint-category">
-                    <strong>Powers:</strong>
-                    <div class="hint-examples">"Can they fly?" "Do they have super strength?"</div>
-                </div>
-                <div class="hint-category">
-                    <strong>Teams:</strong>
-                    <div class="hint-examples">"Are they in the Justice League?" "Are they an Avenger?"</div>
-                </div>
-                <div class="hint-category">
-                    <strong>Appearance:</strong>
-                    <div class="hint-examples">"Do they wear a cape?" "Are they male/female?"</div>
-                </div>
-            `;
+        Object.keys(attributeAnalysis).forEach(attributeName => {
+            const analysis = attributeAnalysis[attributeName];
+            const displayName = this.formatAttributeName(attributeName);
+            
+            hints += `<div class="hint-category">`;
+            hints += `<strong>${displayName}:</strong>`;
+            hints += `<div class="hint-examples">`;
+            
+            if (analysis.type === 'boolean') {
+                hints += `"Do they have ${displayName.toLowerCase()}?" "Are they ${attributeName}?"`;
+            } else if (analysis.type === 'categorical') {
+                const examples = analysis.values.slice(0, 3).map(value => 
+                    `"Are they ${value}?"`
+                ).join(' ');
+                hints += examples;
+            } else {
+                hints += `"What is their ${displayName.toLowerCase()}?"`;
+            }
+            
+            hints += `</div></div>`;
+        });
+        
+        if (hints === '') {
+            hints = '<div class="hint-category"><strong>Ask yes/no questions about the character attributes!</strong></div>';
         }
         
         hintContent.innerHTML = hints;
+    }
+    
+    analyzeCharacterAttributes(characters) {
+        const attributeAnalysis = {};
+        
+        // Get all unique attributes
+        const allAttributes = new Set();
+        characters.forEach(char => {
+            Object.keys(char.attributes).forEach(attr => allAttributes.add(attr));
+        });
+        
+        // Analyze each attribute
+        allAttributes.forEach(attributeName => {
+            const values = characters.map(char => char.attributes[attributeName]).filter(v => v !== undefined);
+            const uniqueValues = [...new Set(values)];
+            
+            let type = 'text';
+            if (uniqueValues.length <= 2 && uniqueValues.every(v => typeof v === 'boolean' || v === 'true' || v === 'false')) {
+                type = 'boolean';
+            } else if (uniqueValues.length <= 8 && uniqueValues.every(v => typeof v === 'string' || typeof v === 'number')) {
+                type = 'categorical';
+            }
+            
+            attributeAnalysis[attributeName] = {
+                type: type,
+                values: uniqueValues,
+                count: uniqueValues.length
+            };
+        });
+        
+        return attributeAnalysis;
     }
     
     setupPowerUps() {
@@ -731,7 +818,7 @@ class GuestQuestGame {
     showRevealAttributeModal(player, attribute, value) {
         document.getElementById('reveal-attribute-player').textContent = player;
         document.getElementById('revealed-attribute-name').textContent = this.formatAttributeName(attribute) + ':';
-        document.getElementById('revealed-attribute-value').textContent = value;
+        document.getElementById('revealed-attribute-value').textContent = this.formatAttributeValue(value);
         
         document.getElementById('reveal-attribute-modal').style.display = 'flex';
     }
