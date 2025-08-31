@@ -30,6 +30,9 @@ class GuestQuestGame {
         this.currentQuestionId = null;
         this.isRoomCreator = false;
         this.currentCharacterSet = 'classic';
+        this.playerStats = this.loadPlayerStats();
+        this.gameStartTime = null;
+        this.questionsAskedThisGame = 0;
         
         this.init();
     }
@@ -540,6 +543,11 @@ class GuestQuestGame {
         this.powerUps = payload.powerUps;
         this.availablePowerUps = payload.availablePowerUps;
         
+        // Initialize game tracking for statistics
+        this.gameStartTime = Date.now();
+        this.questionsAskedThisGame = 0;
+        this.currentCharacterSet = payload.characterSet;
+        
         // Hide lobby, show game
         document.getElementById('lobby-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
@@ -799,6 +807,12 @@ class GuestQuestGame {
         
         if (confirm(`Use ${this.availablePowerUps[powerUpId].name}?`)) {
             this.send('use_powerup', { powerUpType: powerUpId });
+            
+            // Track power-up usage statistics
+            if (this.playerStats.powerUpsUsed[powerUpId] !== undefined) {
+                this.playerStats.powerUpsUsed[powerUpId]++;
+                this.savePlayerStats();
+            }
         }
     }
     
@@ -1096,6 +1110,9 @@ class GuestQuestGame {
         
         // Update turn state - let server handle the actual logic
         this.turnState.questionsAskedCount++;
+        
+        // Track statistics
+        this.questionsAskedThisGame++;
         
         console.log(`Question sent. Count: ${this.turnState.questionsAskedCount}, Double question used: ${this.turnState.doubleQuestionUsed}`);
         console.log('Turn state after asking:', this.turnState);
@@ -1452,13 +1469,22 @@ class GuestQuestGame {
         document.getElementById('game-over-screen').style.display = 'block';
         
         const resultEl = document.getElementById('game-result');
-        if (payload.winner === this.playerName) {
+        const isWinner = payload.winner === this.playerName;
+        
+        if (isWinner) {
             resultEl.textContent = `🎉 You Won! The character was ${payload.character}`;
             resultEl.style.color = '#28a745';
         } else {
             resultEl.textContent = `😔 ${payload.winner} Won! The character was ${payload.character}`;
             resultEl.style.color = '#dc3545';
         }
+        
+        // Calculate game time and update statistics
+        const gameTimeSeconds = this.gameStartTime ? Math.round((Date.now() - this.gameStartTime) / 1000) : 0;
+        this.updateGameStats(isWinner, gameTimeSeconds);
+        
+        // Display statistics
+        this.displayGameStats();
     }
     
     closeAllModals() {
@@ -1492,6 +1518,281 @@ class GuestQuestGame {
         messageEl.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
         logEl.appendChild(messageEl);
         logEl.scrollTop = logEl.scrollHeight;
+    }
+    
+    // Statistics system methods
+    loadPlayerStats() {
+        const saved = localStorage.getItem('guestquest_stats');
+        return saved ? JSON.parse(saved) : {
+            gamesPlayed: 0,
+            gamesWon: 0,
+            totalQuestionsAsked: 0,
+            totalGameTime: 0, // in seconds
+            favoriteCharacterSet: null,
+            achievements: [],
+            winStreak: 0,
+            bestWinStreak: 0,
+            averageQuestionsPerGame: 0,
+            averageGameTime: 0,
+            powerUpsUsed: {
+                reveal_attribute: 0,
+                double_question: 0,
+                elimination_hint: 0
+            },
+            characterSetStats: {},
+            firstGameDate: null,
+            lastGameDate: null
+        };
+    }
+    
+    savePlayerStats() {
+        // Calculate averages before saving
+        if (this.playerStats.gamesPlayed > 0) {
+            this.playerStats.averageQuestionsPerGame = 
+                Math.round((this.playerStats.totalQuestionsAsked / this.playerStats.gamesPlayed) * 10) / 10;
+            this.playerStats.averageGameTime = 
+                Math.round((this.playerStats.totalGameTime / this.playerStats.gamesPlayed) * 10) / 10;
+        }
+        
+        localStorage.setItem('guestquest_stats', JSON.stringify(this.playerStats));
+        console.log('📊 Player stats saved:', this.playerStats);
+    }
+    
+    updateGameStats(isWinner, gameTimeSeconds) {
+        const now = new Date().toISOString();
+        
+        // First time playing
+        if (!this.playerStats.firstGameDate) {
+            this.playerStats.firstGameDate = now;
+        }
+        this.playerStats.lastGameDate = now;
+        
+        // Basic game stats
+        this.playerStats.gamesPlayed++;
+        this.playerStats.totalQuestionsAsked += this.questionsAskedThisGame;
+        this.playerStats.totalGameTime += gameTimeSeconds;
+        
+        // Win/loss tracking
+        if (isWinner) {
+            this.playerStats.gamesWon++;
+            this.playerStats.winStreak++;
+            this.playerStats.bestWinStreak = Math.max(
+                this.playerStats.bestWinStreak, 
+                this.playerStats.winStreak
+            );
+        } else {
+            this.playerStats.winStreak = 0;
+        }
+        
+        // Character set tracking
+        if (!this.playerStats.characterSetStats[this.currentCharacterSet]) {
+            this.playerStats.characterSetStats[this.currentCharacterSet] = {
+                gamesPlayed: 0,
+                gamesWon: 0,
+                questionsAsked: 0
+            };
+        }
+        
+        const charSetStats = this.playerStats.characterSetStats[this.currentCharacterSet];
+        charSetStats.gamesPlayed++;
+        charSetStats.questionsAsked += this.questionsAskedThisGame;
+        if (isWinner) {
+            charSetStats.gamesWon++;
+        }
+        
+        // Update favorite character set
+        this.updateFavoriteCharacterSet();
+        
+        // Check for achievements
+        this.checkAchievements(isWinner);
+        
+        this.savePlayerStats();
+    }
+    
+    updateFavoriteCharacterSet() {
+        let mostPlayed = null;
+        let maxGames = 0;
+        
+        Object.keys(this.playerStats.characterSetStats).forEach(setId => {
+            const stats = this.playerStats.characterSetStats[setId];
+            if (stats.gamesPlayed > maxGames) {
+                maxGames = stats.gamesPlayed;
+                mostPlayed = setId;
+            }
+        });
+        
+        this.playerStats.favoriteCharacterSet = mostPlayed;
+    }
+    
+    checkAchievements(isWinner) {
+        const achievements = [];
+        
+        // First win
+        if (isWinner && this.playerStats.gamesWon === 1) {
+            achievements.push('first_win');
+        }
+        
+        // Win streak achievements
+        if (this.playerStats.winStreak === 3) {
+            achievements.push('win_streak_3');
+        }
+        if (this.playerStats.winStreak === 5) {
+            achievements.push('win_streak_5');
+        }
+        if (this.playerStats.winStreak === 10) {
+            achievements.push('win_streak_10');
+        }
+        
+        // Games played milestones
+        if (this.playerStats.gamesPlayed === 10) {
+            achievements.push('veteran_10');
+        }
+        if (this.playerStats.gamesPlayed === 50) {
+            achievements.push('veteran_50');
+        }
+        if (this.playerStats.gamesPlayed === 100) {
+            achievements.push('veteran_100');
+        }
+        
+        // Question efficiency
+        if (isWinner && this.questionsAskedThisGame <= 5) {
+            achievements.push('efficient_win');
+        }
+        
+        // Power-up master
+        const totalPowerUps = Object.values(this.playerStats.powerUpsUsed).reduce((a, b) => a + b, 0);
+        if (totalPowerUps === 10) {
+            achievements.push('power_user');
+        }
+        
+        // Add new achievements
+        achievements.forEach(achievement => {
+            if (!this.playerStats.achievements.includes(achievement)) {
+                this.playerStats.achievements.push(achievement);
+                this.showAchievementNotification(achievement);
+            }
+        });
+    }
+    
+    showAchievementNotification(achievementId) {
+        const achievementNames = {
+            first_win: '🏆 First Victory!',
+            win_streak_3: '🔥 3 Win Streak!',
+            win_streak_5: '🔥 5 Win Streak!',
+            win_streak_10: '🔥 10 Win Streak!',
+            veteran_10: '🎖️ 10 Games Played!',
+            veteran_50: '🎖️ 50 Games Played!',
+            veteran_100: '🎖️ 100 Games Played!',
+            efficient_win: '⚡ Efficient Victory!',
+            power_user: '🎯 Power-up Master!'
+        };
+        
+        const name = achievementNames[achievementId] || '🏅 Achievement Unlocked!';
+        
+        const notification = document.createElement('div');
+        notification.className = 'achievement-notification';
+        notification.innerHTML = `
+            <div class="achievement-content">
+                <div class="achievement-title">${name}</div>
+                <div class="achievement-subtitle">Achievement Unlocked!</div>
+            </div>
+        `;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001;
+            font-weight: bold;
+            animation: achievementSlide 0.5s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'achievementSlide 0.5s ease-out reverse';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }
+        }, 4000);
+    }
+    
+    displayGameStats() {
+        const winRate = this.playerStats.gamesPlayed > 0 ? 
+            ((this.playerStats.gamesWon / this.playerStats.gamesPlayed) * 100).toFixed(1) : '0.0';
+        
+        const statsHTML = `
+            <div class="player-stats">
+                <h4>📊 Your Statistics</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">${this.playerStats.gamesPlayed}</span>
+                        <span class="stat-label">Games Played</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${winRate}%</span>
+                        <span class="stat-label">Win Rate</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${this.playerStats.winStreak}</span>
+                        <span class="stat-label">Win Streak</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${this.playerStats.averageQuestionsPerGame}</span>
+                        <span class="stat-label">Avg Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${this.playerStats.bestWinStreak}</span>
+                        <span class="stat-label">Best Streak</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${Math.round(this.playerStats.averageGameTime / 60)}m</span>
+                        <span class="stat-label">Avg Game Time</span>
+                    </div>
+                </div>
+                ${this.playerStats.achievements.length > 0 ? `
+                    <div class="achievements-section">
+                        <h5>🏆 Achievements (${this.playerStats.achievements.length})</h5>
+                        <div class="achievements-list">
+                            ${this.getAchievementNames().join(' • ')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // Add to game over screen
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const existingStats = gameOverScreen.querySelector('.player-stats');
+        if (existingStats) existingStats.remove();
+        
+        gameOverScreen.insertAdjacentHTML('beforeend', statsHTML);
+    }
+    
+    getAchievementNames() {
+        const achievementNames = {
+            first_win: '🏆 First Victory',
+            win_streak_3: '🔥 3 Win Streak',
+            win_streak_5: '🔥 5 Win Streak',
+            win_streak_10: '🔥 10 Win Streak',
+            veteran_10: '🎖️ Veteran (10)',
+            veteran_50: '🎖️ Veteran (50)',
+            veteran_100: '🎖️ Veteran (100)',
+            efficient_win: '⚡ Efficient Victory',
+            power_user: '🎯 Power-up Master'
+        };
+        
+        return this.playerStats.achievements.map(id => 
+            achievementNames[id] || '🏅 Achievement'
+        );
     }
     
     send(type, payload) {

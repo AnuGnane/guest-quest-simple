@@ -1,41 +1,68 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Modal Cleanup Test</title>
     <style>
-        .modal { display: none; position: fixed; top: 50%; left: 50%; background: white; padding: 20px; border: 1px solid #ccc; }
-        .modal.show { display: block; }
-        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
-        .pass { background: #d4edda; color: #155724; }
-        .fail { background: #f8d7da; color: #721c24; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
+
 <body>
     <h1>🧪 Modal Cleanup Test</h1>
-    
+
     <div id="test-results"></div>
-    
+
     <button onclick="runTest()">Run Test</button>
     <button onclick="showAllModals()">Show All Modals</button>
     <button onclick="closeAllModals()">Close All Modals</button>
-    
+
     <!-- Test modals (same structure as game) -->
     <div id="question-modal" class="modal">
         <h3>Question Modal</h3>
         <p>This is the question modal</p>
     </div>
-    
+
     <div id="elimination-hint-modal" class="modal">
         <h3>Elimination Hint Modal</h3>
         <p>This is the elimination hint modal</p>
     </div>
-    
+
     <div id="reveal-attribute-modal" class="modal">
         <h3>Reveal Attribute Modal</h3>
         <p>This is the reveal attribute modal</p>
     </div>
-    
-    <div id="floating-question-btn" style="display: none; position: fixed; bottom: 20px; right: 20px; background: blue; color: white; padding: 10px;">
+
+    <div id="floating-question-btn"
+        style="display: none; position: fixed; bottom: 20px; right: 20px; background: blue; color: white; padding: 10px;">
         Floating Button
     </div>
 
@@ -45,26 +72,26 @@
             // Close all possible modals that could be open
             const modals = [
                 'question-modal',
-                'elimination-hint-modal', 
+                'elimination-hint-modal',
                 'reveal-attribute-modal'
             ];
-            
+
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (modal) {
                     modal.style.display = 'none';
                 }
             });
-            
+
             // Hide floating button too
             const floatingBtn = document.getElementById('floating-question-btn');
             if (floatingBtn) {
                 floatingBtn.style.display = 'none';
             }
-            
+
             console.log('🔒 All modals closed for game end');
         }
-        
+
         function showAllModals() {
             const modals = ['question-modal', 'elimination-hint-modal', 'reveal-attribute-modal'];
             modals.forEach(modalId => {
@@ -73,60 +100,60 @@
                     modal.style.display = 'block';
                 }
             });
-            
+
             const floatingBtn = document.getElementById('floating-question-btn');
             if (floatingBtn) {
                 floatingBtn.style.display = 'block';
             }
         }
-        
+
         function runTest() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test Results:</h3>';
-            
+
             // Test 1: Show all modals
             showAllModals();
-            
+
             // Check if modals are visible
             const modals = ['question-modal', 'elimination-hint-modal', 'reveal-attribute-modal'];
             let allVisible = true;
-            
+
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (!modal || modal.style.display !== 'block') {
                     allVisible = false;
                 }
             });
-            
+
             const floatingBtn = document.getElementById('floating-question-btn');
             if (!floatingBtn || floatingBtn.style.display !== 'block') {
                 allVisible = false;
             }
-            
+
             if (allVisible) {
                 results.innerHTML += '<div class="test-result pass">✅ Step 1: All modals shown successfully</div>';
             } else {
                 results.innerHTML += '<div class="test-result fail">❌ Step 1: Failed to show all modals</div>';
             }
-            
+
             // Test 2: Close all modals
             setTimeout(() => {
                 closeAllModals();
-                
+
                 // Check if all modals are hidden
                 let allHidden = true;
-                
+
                 modals.forEach(modalId => {
                     const modal = document.getElementById(modalId);
                     if (!modal || modal.style.display !== 'none') {
                         allHidden = false;
                     }
                 });
-                
+
                 if (floatingBtn && floatingBtn.style.display !== 'none') {
                     allHidden = false;
                 }
-                
+
                 if (allHidden) {
                     results.innerHTML += '<div class="test-result pass">✅ Step 2: All modals closed successfully</div>';
                     results.innerHTML += '<div class="test-result pass">🎉 Modal cleanup test PASSED - Game over screen will not be blocked</div>';
@@ -138,4 +165,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -187,7 +187,7 @@ const aiPersonalities = {
     questionEfficiency: 0.85,
     commonMistakes: ['asking about hair color too early'],
     improvementSuggestions: ['focus on elimination questions'],
-    skillProgression: 'intermediate → advanced',
+    s killProgression: 'intermediate → advanced',
     personalizedTips: ['try using power-ups earlier']
   }
 }

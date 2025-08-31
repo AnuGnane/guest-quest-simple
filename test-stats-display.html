@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>Statistics Display Test</title>
+    <link rel=\"stylesheet\" href=\"public/stats-styles.css\">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class=\"test-container\">
+        <h1>📊 Statistics System Test</h1>
+        <p>This page tests the statistics display and localStorage functionality.</p>
+        
+        <div>
+            <button class=\"test-button\" onclick=\"createTestStats()\">Create Test Statistics</button>
+            <button class=\"test-button\" onclick=\"displayStats()\">Display Statistics</button>
+            <button class=\"test-button\" onclick=\"clearStats()\">Clear Statistics</button>
+            <button class=\"test-button\" onclick=\"showAchievement()\">Test Achievement</button>
+        </div>
+        
+        <div id=\"stats-display\"></div>
+    </div>
+
+    <script>
+        // Mock statistics data for testing
+        function createTestStats() {
+            const testStats = {
+                gamesPlayed: 25,
+                gamesWon: 18,
+                totalQuestionsAsked: 125,
+                totalGameTime: 1800, // 30 minutes
+                favoriteCharacterSet: 'classic',
+                achievements: ['first_win', 'win_streak_3', 'veteran_10', 'efficient_win'],
+                winStreak: 3,
+                bestWinStreak: 5,
+                averageQuestionsPerGame: 5.0,
+                averageGameTime: 72, // seconds
+                powerUpsUsed: {
+                    reveal_attribute: 8,
+                    double_question: 5,
+                    elimination_hint: 3
+                },
+                characterSetStats: {
+                    classic: { gamesPlayed: 15, gamesWon: 12, questionsAsked: 75 },
+                    superheroes: { gamesPlayed: 10, gamesWon: 6, questionsAsked: 50 }
+                },
+                firstGameDate: '2024-01-15T10:30:00.000Z',
+                lastGameDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('guestquest_stats', JSON.stringify(testStats));
+            console.log('✅ Test statistics created:', testStats);
+            alert('Test statistics created! Click \"Display Statistics\" to see them.');
+        }
+        
+        function displayStats() {
+            const saved = localStorage.getItem('guestquest_stats');
+            if (!saved) {
+                alert('No statistics found! Create test statistics first.');
+                return;
+            }
+            
+            const stats = JSON.parse(saved);
+            const winRate = stats.gamesPlayed > 0 ? 
+                ((stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1) : '0.0';
+            
+            const statsHTML = `
+                <div class=\"player-stats\">
+                    <h4>📊 Your Statistics</h4>
+                    <div class=\"stats-grid\">
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${stats.gamesPlayed}</span>
+                            <span class=\"stat-label\">Games Played</span>
+                        </div>
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${winRate}%</span>
+                            <span class=\"stat-label\">Win Rate</span>
+                        </div>
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${stats.winStreak}</span>
+                            <span class=\"stat-label\">Win Streak</span>
+                        </div>
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${stats.averageQuestionsPerGame}</span>
+                            <span class=\"stat-label\">Avg Questions</span>
+                        </div>
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${stats.bestWinStreak}</span>
+                            <span class=\"stat-label\">Best Streak</span>
+                        </div>
+                        <div class=\"stat-item\">
+                            <span class=\"stat-value\">${Math.round(stats.averageGameTime / 60)}m</span>
+                            <span class=\"stat-label\">Avg Game Time</span>
+                        </div>
+                    </div>
+                    ${stats.achievements.length > 0 ? `
+                        <div class=\"achievements-section\">
+                            <h5>🏆 Achievements (${stats.achievements.length})</h5>
+                            <div class=\"achievements-list\">
+                                ${getAchievementNames(stats.achievements).join(' • ')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('stats-display').innerHTML = statsHTML;
+        }
+        
+        function getAchievementNames(achievements) {
+            const achievementNames = {
+                first_win: '🏆 First Victory',
+                win_streak_3: '🔥 3 Win Streak',
+                win_streak_5: '🔥 5 Win Streak',
+                win_streak_10: '🔥 10 Win Streak',
+                veteran_10: '🎖️ Veteran (10)',
+                veteran_50: '🎖️ Veteran (50)',
+                veteran_100: '🎖️ Veteran (100)',
+                efficient_win: '⚡ Efficient Victory',
+                power_user: '🎯 Power-up Master'
+            };
+            
+            return achievements.map(id => 
+                achievementNames[id] || '🏅 Achievement'
+            );
+        }
+        
+        function clearStats() {
+            localStorage.removeItem('guestquest_stats');
+            document.getElementById('stats-display').innerHTML = '';
+            console.log('🗑️ Statistics cleared');
+            alert('Statistics cleared!');
+        }
+        
+        function showAchievement() {
+            const notification = document.createElement('div');
+            notification.className = 'achievement-notification';
+            notification.innerHTML = `
+                <div class=\"achievement-content\">
+                    <div class=\"achievement-title\">🏆 Test Achievement!</div>
+                    <div class=\"achievement-subtitle\">Achievement Unlocked!</div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'achievementSlide 0.5s ease-out reverse';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 500);
+                }
+            }, 4000);
+        }
+    </script>
+</body>
+</html>"
